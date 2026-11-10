@@ -1,0 +1,80 @@
+# ─────────────────────────────────────────────
+# Dades personals (principi III de la constitució)
+# ─────────────────────────────────────────────
+# Dades de l'aplicació: SQLite, originals i fotos
+data/
+# Tracks reals per a l'avaluació
+eval/private/
+
+# Xarxa de seguretat: cap track real fora de sample-data/
+*.gpx
+*.fit
+*.tcx
+!sample-data/**/*.gpx
+!sample-data/**/*.fit
+!sample-data/**/*.tcx
+# Fixtures sintètiques de les proves
+!backend/tests/**/*.gpx
+!backend/tests/**/*.fit
+!backend/tests/**/*.tcx
+
+# Bases de dades locals fora de data/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# ─────────────────────────────────────────────
+# Documents SDD (de treball local, segons plan.md)
+# ─────────────────────────────────────────────
+.specify/
+specs/
+
+# ─────────────────────────────────────────────
+# Frontend (Node, Vite)
+# ─────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─────────────────────────────────────────────
+# Backend (Python)
+# ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+
+# ─────────────────────────────────────────────
+# Secrets i configuració local
+# ─────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─────────────────────────────────────────────
+# Editor i sistema
+# ─────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.log

@@ -16,7 +16,7 @@ export default function Home() {
       <MapView onMap={setMap} />
       {routes?.length === 0 && (
         <p role="status" className="absolute top-3 left-3 rounded-xl border border-slate-800 bg-slate-900 p-3 text-sm shadow-lg">
-          No routes yet. Run <code>npm run sample-data</code> in <code>frontend/</code> or create one.
+          No routes yet. Import your outings or draw a route.
         </p>
       )}
     </div>

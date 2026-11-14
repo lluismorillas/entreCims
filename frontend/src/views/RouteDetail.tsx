@@ -1,19 +1,48 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import * as maplibregl from "maplibre-gl";
+import ConfirmButton from "../components/ConfirmButton";
 import ElevationProfile from "../components/ElevationProfile";
 import MapView from "../components/MapView";
-import { TYPE_LABEL, duration, estimateSeconds, km, pace, useRoutes } from "../data";
+import {
+  type RouteInfo,
+  TYPE_LABEL,
+  addPhotos,
+  deleteRoute,
+  duration,
+  estimateSeconds,
+  km,
+  pace,
+  updateRoute,
+  useLists,
+  useRoute,
+} from "../data";
+
+const label = "mb-1 block text-xs font-semibold";
+
+const PHOTO_PLACE = {
+  exif: "On the map, from its GPS position",
+  interpolated: "On the map, from the time it was taken",
+  none: "Not on the map: no GPS position, and no time within the outing",
+};
 
 export default function RouteDetail() {
   const { id } = useParams();
-  const routes = useRoutes();
-  const route = routes?.find((r) => r.id === id);
+  const [route, setRoute] = useRoute(id!);
+  const [lists, setLists] = useLists();
+  const navigate = useNavigate();
   const [map, setMap] = useState<maplibregl.Map | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
+
+  // The track and the photos keep their identity when the category changes, so the map is not redrawn.
+  const track = route?.line;
+  const photos = route?.photos;
 
   useEffect(() => {
-    if (!map || !route || route.line.length < 2) return;
-    const line = route.line.map(([lon, lat]) => [lon, lat]);
+    if (!map || !track || track.length < 2) return;
+    const line = track.map(([lon, lat]) => [lon, lat]);
     map.addSource("track", {
       type: "geojson",
       data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: line } },
@@ -55,7 +84,25 @@ export default function RouteDetail() {
     const bounds = new maplibregl.LngLatBounds(line[0] as [number, number], line[0] as [number, number]);
     for (const p of line) bounds.extend(p as [number, number]);
     map.fitBounds(bounds, { padding: 50, maxZoom: 15, animate: false });
-  }, [map, route]);
+  }, [map, track]);
+
+  // One marker per photo that could be placed; its popup shows the photo (FR-110).
+  useEffect(() => {
+    if (!map || !photos) return;
+    const markers = photos
+      .filter((p) => p.lat != null && p.lon != null)
+      .map((p) => {
+        const img = document.createElement("img");
+        img.src = `/api/photos/${p.id}`;
+        img.alt = "Photo taken at this point";
+        img.className = "max-h-48 max-w-48 rounded";
+        return new maplibregl.Marker({ color: "#f59e0b" })
+          .setLngLat([p.lon!, p.lat!])
+          .setPopup(new maplibregl.Popup({ offset: 30, maxWidth: "none" }).setDOMContent(img))
+          .addTo(map);
+      });
+    return () => markers.forEach((m) => m.remove());
+  }, [map, photos]);
 
   // Marks on the map the point the pointer is over in the profile.
   const showCursor = useCallback(
@@ -67,7 +114,7 @@ export default function RouteDetail() {
     [map],
   );
 
-  if (!routes) return null;
+  if (route === undefined) return null;
   if (!route)
     return (
       <p className="p-6">
@@ -80,13 +127,48 @@ export default function RouteDetail() {
 
   const planned = route.kind === "planned";
   const time = planned ? estimateSeconds(route) : { seconds: route.totalS, personalised: false };
-  const stats = [
+  // Runs `action` and shows its failure instead of leaving the click without an answer.
+  const attempt = async (action: () => Promise<void>) => {
+    setBusy(true);
+    setError("");
+    try {
+      await action();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "The server could not be reached.");
+    }
+    setBusy(false);
+  };
+
+  const stats: [string, ReactNode][] = [
     ["Distance", km(route.distanceM)],
     [planned ? "Estimated duration" : "Duration", time.seconds ? duration(time.seconds) : "–"],
+    ...(route.movingS != null ? ([["Moving time", duration(route.movingS)]] as [string, ReactNode][]) : []),
     ["Ascent", route.ascentM == null ? "–" : `${route.ascentM} m`],
     ["Descent", route.descentM == null ? "–" : `${route.descentM} m`],
     ["Average pace", time.seconds ? pace(time.seconds, route.distanceM) : "–"],
-    ["Category", TYPE_LABEL[route.type]],
+    [
+      "Category",
+      // The type comes from the file and can always be corrected (FR-106).
+      route.fromApi ? (
+        <select
+          key="category"
+          aria-label="Category"
+          value={route.type}
+          disabled={busy}
+          onChange={(e) =>
+            attempt(async () => setRoute({ ...route, ...(await updateRoute(route.id, { type: e.target.value as RouteInfo["type"] })) }))
+          }
+        >
+          {(["hike", "trail", "run"] as const).map((t) => (
+            <option key={t} value={t}>
+              {TYPE_LABEL[t]}
+            </option>
+          ))}
+        </select>
+      ) : (
+        TYPE_LABEL[route.type]
+      ),
+    ],
   ];
 
   return (
@@ -113,9 +195,86 @@ export default function RouteDetail() {
             {route.source && <span>{route.source === "drawn" ? "Drawn in the planner" : "Uploaded file"}</span>}
             <span>{route.difficulty ? route.difficulty[0].toUpperCase() + route.difficulty.slice(1) : "Not rated"}</span>
           </p>
+          {route.fromApi && !editing && (
+            <button onClick={() => setEditing(true)} className="btn mt-3 mr-2 text-sm">
+              Edit details
+            </button>
+          )}
+          {route.fromApi && editing && (
+            // What a file cannot say: filled in once the track is imported.
+            <form
+              aria-label="Edit details"
+              className="mt-4 grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 text-sm sm:grid-cols-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = new FormData(e.currentTarget);
+                const text = (key: string) => String(form.get(key) ?? "").trim();
+                attempt(async () => {
+                  const saved = await updateRoute(route.id, {
+                    name: text("name"),
+                    author: text("author"),
+                    location: text("location"),
+                    description: text("description"),
+                    tags: text("tags").split(",").map((t) => t.trim()).filter(Boolean),
+                  });
+                  setRoute({ ...route, ...saved });
+                  setEditing(false);
+                });
+              }}
+            >
+              <label className="block">
+                <span className={label}>Name</span>
+                <input name="name" required pattern=".*\S.*" defaultValue={route.name} className="w-full" />
+              </label>
+              <label className="block">
+                <span className={label}>Author (optional)</span>
+                <input name="author" defaultValue={route.author ?? ""} className="w-full" />
+              </label>
+              <label className="block">
+                <span className={label}>Location</span>
+                <input name="location" defaultValue={route.location ?? ""} placeholder="e.g. Setcases, Ripollès" className="w-full" />
+              </label>
+              <label className="block">
+                <span className={label}>Tags (comma separated)</span>
+                <input name="tags" defaultValue={route.tags?.join(", ") ?? ""} className="w-full" />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className={label}>Describe your route</span>
+                <textarea name="description" rows={4} defaultValue={route.description ?? ""} className="w-full" />
+              </label>
+              <div className="flex gap-2 sm:col-span-2">
+                <button disabled={busy} className="btn btn-primary">
+                  Save
+                </button>
+                <button type="button" onClick={() => setEditing(false)} className="btn">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+          {route.fromApi && (
+            <ConfirmButton
+              label="Delete route"
+              question={`Delete "${route.name}", its track and its photos? This cannot be undone.`}
+              disabled={busy}
+              className="mt-3 text-sm"
+              onConfirm={() =>
+                attempt(async () => {
+                  await deleteRoute(route.id);
+                  setLists(lists.map((l) => ({ ...l, routeIds: l.routeIds.filter((r) => r !== route.id) })));
+                  navigate("/routes");
+                })
+              }
+            />
+          )}
+          {error && (
+            <p role="alert" className="mt-2 text-sm text-red-400">
+              {error}
+            </p>
+          )}
         </header>
 
-        <dl className="grid grid-cols-2 gap-4 border-y border-slate-800 py-4 text-center sm:grid-cols-3 lg:grid-cols-6">
+        <dl className="grid grid-cols-2 gap-4 border-y border-slate-800 py-4 text-center sm:grid-cols-3 lg:grid-cols-4">
           {stats.map(([label, value]) => (
             <div key={label}>
               <dt className="text-sm font-semibold">{label}</dt>
@@ -123,6 +282,11 @@ export default function RouteDetail() {
             </div>
           ))}
         </dl>
+        {route.fastForHike && (
+          <p role="status" className="-mt-3 text-sm text-amber-300">
+            This is faster than a usual hike. If it was a run, change its category.
+          </p>
+        )}
         {planned && time.seconds && !time.personalised && (
           <p className="-mt-3 text-xs text-slate-500">Duration is a generic walking estimate (Tobler), not yet based on your pace.</p>
         )}
@@ -157,6 +321,60 @@ export default function RouteDetail() {
             <ElevationProfile line={route.line} totalM={route.distanceM} onHover={showCursor} />
           </div>
         </section>
+
+        {photos && (
+          <section aria-labelledby="photos-title">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 id="photos-title" className="text-lg font-bold">
+                Photos
+              </h2>
+              <label className="btn cursor-pointer text-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky-400">
+                {busy ? "Working…" : "Add photos"}
+                <input
+                  type="file"
+                  multiple
+                  disabled={busy}
+                  accept="image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const files = [...(e.target.files ?? [])];
+                    e.target.value = ""; // so the same photo can be chosen again
+                    if (!files.length) return;
+                    attempt(async () => {
+                      const results = await addPhotos(route.id, files);
+                      setRoute({ ...route, photos: [...photos, ...results.flatMap((r) => r.photo ?? [])] });
+                      const failed = results.filter((r) => r.error);
+                      if (failed.length) setError(failed.map((r) => `${r.filename}: ${r.error}`).join(" "));
+                    });
+                  }}
+                />
+              </label>
+            </div>
+            {photos.length === 0 ? (
+              <p className="text-sm text-slate-400">
+                No photos yet. A photo is placed on the map by its GPS position or, without one, by the time it was taken.
+              </p>
+            ) : (
+              <ul className="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3">
+                {photos.map((p, i) => (
+                  <li key={p.id}>
+                    <figure>
+                      <a href={`/api/photos/${p.id}`} target="_blank" rel="noreferrer">
+                        <img
+                          src={`/api/photos/${p.id}`}
+                          alt={`Photo ${i + 1} of ${photos.length}`}
+                          loading="lazy"
+                          className="aspect-square w-full rounded-xl object-cover"
+                        />
+                      </a>
+                      <figcaption className="mt-1 text-xs text-slate-400">{PHOTO_PLACE[p.position_source ?? "none"]}</figcaption>
+                    </figure>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
       </div>
     </div>
   );

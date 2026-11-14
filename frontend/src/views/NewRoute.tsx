@@ -1,14 +1,25 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router";
 import * as maplibregl from "maplibre-gl";
 import MapView from "../components/MapView";
 import { fitTo } from "../components/useRouteMarkers";
-import { type RouteInfo, TYPE_LABEL, distance, duration, km, saveDrawnRoute, simplify, trackStats, useLists, useRoutes } from "../data";
-import { readTrackFile } from "../gpx";
+import {
+  type ImportResult,
+  type RouteInfo,
+  TYPE_LABEL,
+  distance,
+  duration,
+  importFiles,
+  km,
+  saveDrawnRoute,
+  simplify,
+  trackStats,
+  useLists,
+  useRoutes,
+} from "../data";
 import { routeLeg } from "../routing";
 
 type Leg = Awaited<ReturnType<typeof routeLeg>>;
-type Upload = Awaited<ReturnType<typeof readTrackFile>>;
 
 // Legs are cached by their two ends, so moving one point only re-asks for the legs that touch it.
 const legCache = new Map<string, Promise<Leg>>();
@@ -51,14 +62,10 @@ export default function NewRoute() {
   const [anchors, setAnchors] = useState<number[][]>([]);
   const [routed, setRouted] = useState({ key: "", legs: [] as Leg[] });
   const [followPaths, setFollowPaths] = useState(true);
-  // Or a track read from a file, which replaces the drawing.
-  const [upload, setUpload] = useState<Upload | null>(null);
+  // Importing files is separate from drawing: the server reads them and answers one result per file.
+  const [imported, setImported] = useState<ImportResult[]>([]);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState("");
-
-  const uploading = useRef(false);
-  useEffect(() => {
-    uploading.current = upload !== null;
-  }, [upload]);
 
   // What the current legs were computed for. While it differs from the request, the old
   // line stays on screen and the route counts as busy.
@@ -98,7 +105,7 @@ export default function NewRoute() {
 
     const click = (e: maplibregl.MapMouseEvent) => {
       // Clicks on a point belong to the point (drag, double-click), not to the map.
-      if (uploading.current || (e.originalEvent.target as Element).closest?.(".maplibregl-marker")) return;
+      if ((e.originalEvent.target as Element).closest?.(".maplibregl-marker")) return;
       const position = [e.lngLat.lng, e.lngLat.lat];
       // A click on the line adds a point inside that leg; anywhere else extends the route.
       const hit = map.queryRenderedFeatures(
@@ -122,7 +129,7 @@ export default function NewRoute() {
 
   // One draggable handle per point.
   useEffect(() => {
-    if (!map || upload) return;
+    if (!map) return;
     const markers = anchors.map((position, i) => {
       const el = document.createElement("button");
       el.type = "button";
@@ -144,10 +151,10 @@ export default function NewRoute() {
       return marker;
     });
     return () => markers.forEach((m) => m.remove());
-  }, [map, anchors, upload]);
+  }, [map, anchors]);
 
   useEffect(() => {
-    const lines = upload ? [upload.points] : anchors.length > 1 ? routed.legs.map((l) => l.coords) : [];
+    const lines = anchors.length > 1 ? routed.legs.map((l) => l.coords) : [];
     (map?.getSource("draft") as maplibregl.GeoJSONSource | undefined)?.setData({
       type: "FeatureCollection",
       features: lines.map((coordinates, leg) => ({
@@ -156,37 +163,27 @@ export default function NewRoute() {
         geometry: { type: "LineString", coordinates },
       })),
     });
-  }, [map, routed, anchors.length, upload]);
+  }, [map, routed, anchors.length]);
 
-  const track = upload ? upload.points : legs.flatMap((l) => l.coords);
+  const track = legs.flatMap((l) => l.coords);
   const stats = track.length > 1 ? trackStats(track) : null;
-  const straight = upload ? 0 : legs.filter((l) => l.failed).length;
-  // A real recorded time beats the estimate; a done route without one has no honest time to show.
-  const totalS = form.completed ? (upload?.elapsedS ?? null) : (stats?.totalS ?? null);
+  const straight = legs.filter((l) => l.failed).length;
+  // A drawn route marked as done has no recorded time, and an estimate would not be honest.
+  const totalS = form.completed ? null : (stats?.totalS ?? null);
 
-  async function loadFile(file: File | undefined) {
-    if (!file) return;
+  async function importAll(files: File[]) {
+    if (!files.length) return;
+    setImporting(true);
+    setError("");
     try {
-      const read = await readTrackFile(file);
-      setError("");
-      setUpload(read);
-      setAnchors([]);
-      setForm((f) => ({
-        ...f,
-        // Keep what the user typed, but not what a previously loaded file had filled in.
-        name: !f.name || f.name === upload?.name ? read.name : f.name,
-        author: !f.author || f.author === upload?.author ? (read.author ?? "") : f.author,
-        date: read.date ?? f.date,
-        completed: read.elapsedS != null,
-      }));
-      if (map) {
-        const bounds = new maplibregl.LngLatBounds();
-        for (const [lon, lat] of read.points) bounds.extend([lon, lat]);
-        map.fitBounds(bounds, { padding: 50, maxZoom: 15 });
-      }
+      const results = await importFiles(files);
+      // A single good file goes straight to its page; a batch stays here with its report.
+      if (results.length === 1 && results[0].activity) navigate(`/routes/${results[0].activity.id}`);
+      else setImported(results);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "The file could not be read.");
+      setError(e instanceof Error ? e.message : "The files could not be imported.");
     }
+    setImporting(false);
   }
 
   return (
@@ -204,7 +201,7 @@ export default function NewRoute() {
             author: form.author.trim() || null,
             type: form.type,
             kind: form.completed ? "recorded" : "planned",
-            source: upload ? "uploaded" : "drawn",
+            source: "drawn",
             location: form.location.trim() || undefined,
             description: form.description.trim() || undefined,
             tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
@@ -219,54 +216,69 @@ export default function NewRoute() {
           navigate(`/routes/${id}`);
         }}
       >
-        <section aria-labelledby="choose" className="space-y-2">
-          <h2 id="choose" className="font-bold">
-            Choose a route
+        <section aria-labelledby="import" className="space-y-2">
+          <h2 id="import" className="font-bold">
+            Import your outings
           </h2>
-          <div className="grid grid-cols-2 gap-2">
-            <button type="button" aria-pressed={!upload} onClick={() => setUpload(null)} className={`btn ${upload ? "" : "border-sky-400 text-sky-300"}`}>
-              Draw a route
-            </button>
-            <label className={`btn cursor-pointer text-center focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky-400 ${upload ? "border-sky-400 text-sky-300" : ""}`}>
-              Upload file
-              <input
-                type="file"
-                accept=".gpx,.tcx"
-                className="sr-only"
-                onChange={(e) => {
-                  loadFile(e.target.files?.[0]);
-                  e.target.value = ""; // so the same file can be chosen again
-                }}
-              />
-            </label>
-          </div>
+          <label className="btn block cursor-pointer text-center focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky-400">
+            {importing ? "Importing…" : "Choose GPX, FIT or TCX files"}
+            <input
+              type="file"
+              multiple
+              disabled={importing}
+              accept=".gpx,.fit,.tcx"
+              className="sr-only"
+              onChange={(e) => {
+                importAll([...(e.target.files ?? [])]);
+                e.target.value = ""; // so the same file can be chosen again
+              }}
+            />
+          </label>
           {error && (
             <p role="alert" className="text-red-400">
               {error}
             </p>
           )}
-          {upload ? (
-            <p className="text-slate-400">Track loaded from a file. Choose “Draw a route” to discard it.</p>
-          ) : (
-            <>
-              <p className="text-slate-400">
-                Click the map to add points. Drag a point to move it, click the line to add one in between, double-click a point to
-                remove it.
-              </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <label className="mr-auto flex items-center gap-1.5" title="Off: join the points with straight lines">
-                  <input type="checkbox" checked={followPaths} onChange={(e) => setFollowPaths(e.target.checked)} className="size-4 accent-sky-400" />
-                  Follow paths
-                </label>
-                <button type="button" disabled={!anchors.length} onClick={() => setAnchors(anchors.slice(0, -1))} className="btn">
-                  Undo
-                </button>
-                <button type="button" disabled={!anchors.length} onClick={() => setAnchors([])} className="btn">
-                  Clear
-                </button>
-              </div>
-            </>
+          {imported.length > 0 && (
+            <ul role="status" aria-label="Import results" className="space-y-1">
+              {imported.map((r, i) => (
+                <li key={i} className={r.activity ? "" : "text-red-400"}>
+                  {r.activity ? (
+                    <>
+                      Imported{" "}
+                      <Link to={`/routes/${r.activity.id}`} className="text-sky-300 underline">
+                        {r.activity.name}
+                      </Link>
+                    </>
+                  ) : (
+                    `${r.filename}: ${r.error}`
+                  )}
+                </li>
+              ))}
+            </ul>
           )}
+        </section>
+
+        <section aria-labelledby="choose" className="space-y-2 border-t border-slate-800 pt-4">
+          <h2 id="choose" className="font-bold">
+            Or draw a route
+          </h2>
+          <p className="text-slate-400">
+            Click the map to add points. Drag a point to move it, click the line to add one in between, double-click a point to remove
+            it.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="mr-auto flex items-center gap-1.5" title="Off: join the points with straight lines">
+              <input type="checkbox" checked={followPaths} onChange={(e) => setFollowPaths(e.target.checked)} className="size-4 accent-sky-400" />
+              Follow paths
+            </label>
+            <button type="button" disabled={!anchors.length} onClick={() => setAnchors(anchors.slice(0, -1))} className="btn">
+              Undo
+            </button>
+            <button type="button" disabled={!anchors.length} onClick={() => setAnchors([])} className="btn">
+              Clear
+            </button>
+          </div>
           {straight > 0 && !busy && (
             <p role="alert" className="text-amber-300">
               No path found for {straight} segment{straight > 1 ? "s" : ""}: drawn as {straight > 1 ? "straight lines" : "a straight line"}.

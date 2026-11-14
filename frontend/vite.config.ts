@@ -4,6 +4,8 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // El worker de MapLibre és un mòdul ES i s'ha d'empaquetar com a tal.
+  //worker MapLibre és mòdul ES i s'ha d'empaquetar com a tal
   worker: { format: "es" },
+  //API (uvicorn, port 8000).
+  server: { proxy: { "/api": "http://localhost:8000" } },
 });

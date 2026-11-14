@@ -3,7 +3,6 @@
 ## Dades
 
 | Font | Ús | Llicència | Atribució |
-|---|---|---|---|
 | OpenStreetMap | Cims i mapa base | ODbL | © OpenStreetMap contributors, visible al mapa |
 | Valhalla (servidor públic de FOSSGIS) | Camí i altitud del planificador de rutes, sobre dades d'OpenStreetMap | Programari MIT; dades ODbL | © OpenStreetMap contributors |
 | Mapterhorn | Terreny 3D i ombrejat del mapa | Diverses fonts obertes, llistades a <https://mapterhorn.com/attribution> | © Mapterhorn, visible al mapa |
@@ -22,7 +21,6 @@ L'aplicació només es connecta a l'exterior per obtenir:
 ## Dependències
 
 | Dependència | Llicència |
-|---|---|
 | MapLibre GL JS | BSD-3-Clause |
 | React i React DOM | MIT |
 | React Router | MIT |

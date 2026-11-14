@@ -1,5 +1,4 @@
 """Esquema SQLite (plan.md §3). Tot viu dins d'un sol directori de dades (NFR-5)."""
-
 import os
 import sqlite3
 from contextlib import contextmanager
@@ -84,7 +83,6 @@ CREATE TABLE IF NOT EXISTS time_models(
 );
 """
 
-
 def init() -> None:
     """Crea el directori de dades i les taules. Es crida un cop, en arrencar el servidor."""
     DATA.mkdir(parents=True, exist_ok=True)
@@ -94,7 +92,6 @@ def init() -> None:
         existing = {row["name"] for row in con.execute("PRAGMA table_info(activities)")}
         for column in {"author", "location", "description", "tags"} - existing:
             con.execute(f"ALTER TABLE activities ADD COLUMN {column} TEXT")
-
 
 @contextmanager
 def session():

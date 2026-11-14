@@ -6,6 +6,8 @@ data/
 # Tracks reals per a l'avaluació
 eval/private/
 
+/sample-data
+
 # Xarxa de seguretat: cap track real fora de sample-data/
 *.gpx
 *.fit
@@ -78,3 +80,5 @@ build/
 Thumbs.db
 *.swp
 *.log
+# Resum generat de sample-data/ (coordenades reals): npm run sample-data
+frontend/public/routes.json

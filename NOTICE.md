@@ -33,6 +33,9 @@ L'aplicació només es connecta a l'exterior per obtenir:
 | gpxpy | Apache-2.0 |
 | defusedxml | PSF |
 | fitdecode | MIT |
+| python-multipart | Apache-2.0 |
+| Pillow | MIT-CMU |
+| tzdata | Apache-2.0 |
 | FastAPI | MIT |
 | Uvicorn | BSD-3-Clause |
 | pytest | MIT |

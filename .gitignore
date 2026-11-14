@@ -80,5 +80,3 @@ build/
 Thumbs.db
 *.swp
 *.log
-# Resum generat de sample-data/ (coordenades reals): npm run sample-data
-frontend/public/routes.json

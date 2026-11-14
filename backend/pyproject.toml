@@ -3,7 +3,13 @@ name = "entrecims-backend"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "defusedxml>=0.7.1",
     "fastapi",
+    "fitdecode>=0.11.0",
+    "gpxpy>=1.6.2",
+    "pillow>=13.0.0",
+    "python-multipart>=0.0.33",
+    "tzdata>=2026.6",
     "uvicorn",
 ]
 

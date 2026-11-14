@@ -12,7 +12,10 @@ COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --locked --no-dev
 COPY backend/src ./src
 COPY --from=frontend /frontend/dist ./static
-ENV PATH="/app/.venv/bin:$PATH"
+ENV PATH="/app/.venv/bin:$PATH" ENTRECIMS_DATA=/data
+# SQLite, originals i fotos: l'usuari sense privilegis hi ha de poder escriure.
+RUN mkdir /data && chown nobody /data
+VOLUME /data
 USER nobody
 EXPOSE 8000
 CMD ["uvicorn", "main:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8000"]

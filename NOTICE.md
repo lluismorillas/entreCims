@@ -33,5 +33,10 @@ L'aplicació només es connecta a l'exterior per obtenir:
 | gpxpy | Apache-2.0 |
 | defusedxml | PSF |
 | fitdecode | MIT |
+| FastAPI | MIT |
+| Uvicorn | BSD-3-Clause |
+| pytest | MIT |
+| HTTPX | BSD-3-Clause |
+| Ruff | MIT |
 
 Aquesta llista s'ha d'ampliar a mesura que s'instal·lin dependències.

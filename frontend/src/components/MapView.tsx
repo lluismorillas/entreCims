@@ -2,17 +2,13 @@ import { useEffect, useRef } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { TILES_ATTRIBUTION, TILES_URL } from "../data";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 
 // Vite no copia el worker quan empaqueta MapLibre: cal indicar-li on és.
 maplibregl.setWorkerUrl(workerUrl);
 
 const env = import.meta.env;
-const TILES_URL =
-  env.VITE_MAP_TILES_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-const TILES_ATTRIBUTION =
-  env.VITE_MAP_ATTRIBUTION ||
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 // Amb una cadena buida, el mapa és 2D i no es demana cap dada d'elevació.
 const TERRAIN_TILEJSON_URL: string =
   env.VITE_TERRAIN_TILEJSON_URL ?? "https://tiles.mapterhorn.com/tilejson.json";
@@ -49,7 +45,8 @@ function buildStyle(): StyleSpecification {
   return style;
 }
 
-export default function MapView() {
+/** Calls `onMap` with the map once its style is loaded, and with null when it goes away. */
+export default function MapView({ onMap }: { onMap: (map: maplibregl.Map | null) => void }) {
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,9 +56,9 @@ export default function MapView() {
     const map = new maplibregl.Map({
       container: container.current,
       style: buildStyle(),
-      center: [1.95, 42.4],
-      zoom: hasTerrain ? 12 : 8,
-      pitch: hasTerrain ? 70 : 0,
+      // World view: each screen then moves the camera to its own routes.
+      center: [0, 20],
+      zoom: 1,
       maxZoom: 18,
       maxPitch: 85,
       attributionControl: { compact: false },
@@ -73,8 +70,14 @@ export default function MapView() {
       );
     }
 
-    return () => map.remove();
-  }, []);
+    // Not "load": that waits for every tile, and never fires if a terrain tile fails.
+    map.once("style.load", () => onMap(map));
+
+    return () => {
+      onMap(null);
+      map.remove();
+    };
+  }, [onMap]);
 
   return <div ref={container} className="h-full w-full" />;
 }

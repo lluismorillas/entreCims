@@ -11,6 +11,7 @@ import {
   duration,
   importFiles,
   km,
+  newId,
   saveDrawnRoute,
   simplify,
   trackStats,
@@ -194,7 +195,7 @@ export default function NewRoute() {
         onSubmit={(e) => {
           e.preventDefault();
           if (!stats || busy) return;
-          const id = crypto.randomUUID();
+          const id = newId();
           saveDrawnRoute({
             id,
             name: form.name.trim(),

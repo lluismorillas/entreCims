@@ -102,6 +102,10 @@ export function simplify(points: number[][]) {
     .map(([lon, lat, ele]) => [+lon.toFixed(5), +lat.toFixed(5), ...(ele == null ? [] : [Math.round(ele)])]);
 }
 
+/** crypto.randomUUID only exists over HTTPS or localhost; opened by LAN IP it is undefined. */
+export const newId = (): string =>
+  crypto.randomUUID?.() ?? Date.now().toString(36) + Math.random().toString(36).slice(2);
+
 export function saveDrawnRoute(route: RouteInfo) {
   save("entrecims.drawn", [...load<RouteInfo>("entrecims.drawn"), route]);
 }

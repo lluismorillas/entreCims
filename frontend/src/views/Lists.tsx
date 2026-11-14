@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import type { Map } from "maplibre-gl";
+import ConfirmButton from "../components/ConfirmButton";
 import MapView from "../components/MapView";
 import { useRouteMarkers } from "../components/useRouteMarkers";
-import { useLists, useRoutes } from "../data";
+import { newId, useLists, useRoutes } from "../data";
 
 export default function Lists() {
   const [map, setMap] = useState<Map | null>(null);
@@ -27,7 +28,7 @@ export default function Lists() {
           onSubmit={(e) => {
             e.preventDefault();
             if (!name.trim()) return;
-            const list = { id: crypto.randomUUID(), name: name.trim(), routeIds: [] };
+            const list = { id: newId(), name: name.trim(), routeIds: [] };
             setLists([...lists, list]);
             setSelectedId(list.id);
             setName("");
@@ -36,6 +37,9 @@ export default function Lists() {
           <input
             aria-label="New list name"
             placeholder="New list name"
+            // An empty name gets the browser's own message instead of a click that does nothing.
+            required
+            pattern=".*\S.*"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="min-w-0 flex-1"
@@ -86,16 +90,16 @@ export default function Lists() {
                 </li>
               ))}
             </ul>
-            <button
-              onClick={() => {
-                if (!confirm(`Delete the list "${selected.name}"? Its routes are kept.`)) return;
+            <ConfirmButton
+              key={selected.id}
+              label="Delete list"
+              question={`Delete the list "${selected.name}"? Its routes are kept.`}
+              className="mt-3"
+              onConfirm={() => {
                 setLists(lists.filter((l) => l !== selected));
                 setSelectedId(null);
               }}
-              className="mt-3 text-red-400 underline"
-            >
-              Delete list
-            </button>
+            />
           </div>
         )}
       </section>

@@ -12,6 +12,7 @@ def client(tmp_path, monkeypatch):
     with TestClient(app) as client:
         yield client
 
+
 def upload(client, *files):
     response = client.post("/api/activities", files=[("files", f) for f in files])
     assert response.status_code == 200

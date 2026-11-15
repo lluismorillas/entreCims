@@ -16,8 +16,9 @@ from importers import MAX_BYTES, TrackError, parse
 
 router = APIRouter(prefix="/api/activities")
 
-#avisa si una sortida 'hike' va més de pressa que això.
+# avisa si una sortida 'hike' va més de pressa que això.
 HIKE_MAX_KMH = float(os.environ.get("ENTRECIMS_HIKE_MAX_KMH", "6"))
+
 
 def _public(row) -> dict:
     activity = dict(row)
@@ -31,16 +32,22 @@ def _public(row) -> dict:
     )
     return activity
 
+
 def find(con, activity_id: str):
-    row = con.execute( "SELECT * FROM activities WHERE id = ?", (activity_id,)).fetchone()
+    row = con.execute(
+        "SELECT * FROM activities WHERE id = ?", (activity_id,)
+    ).fetchone()
     if row is None:
         raise HTTPException(404, "Activity not found.")
     return row
 
+
 def _import(filename: str, data: bytes) -> dict:
     file_hash = sha256(data).hexdigest()
     with db.session() as con:
-        same = con.execute("SELECT name FROM activities WHERE file_hash = ?", (file_hash,)).fetchone()
+        same = con.execute(
+            "SELECT name FROM activities WHERE file_hash = ?", (file_hash,)
+        ).fetchone()
         if same:
             raise TrackError(f"This file was already imported as “{same['name']}”.")
         track = parse(filename, data)
@@ -70,22 +77,25 @@ def _import(filename: str, data: bytes) -> dict:
         )
         con.executemany(
             "INSERT INTO points VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            ((
-                activity_id,
-                seq,
-                p.lat,
-                p.lon,
-                p.ele,
-                p.time and p.time.isoformat(),
-                stats.dist_m[seq],
-                stats.ele_smooth_m and stats.ele_smooth_m[seq],)
+            (
+                (
+                    activity_id,
+                    seq,
+                    p.lat,
+                    p.lon,
+                    p.ele,
+                    p.time and p.time.isoformat(),
+                    stats.dist_m[seq],
+                    stats.ele_smooth_m and stats.ele_smooth_m[seq],
+                )
                 for seq, p in enumerate(stats.points)
             ),
         )
-        #original es conserva sense modificar. Si no es pot desar, la sessió es desfà.
+        # original es conserva sense modificar. Si no es pot desar, la sessió es desfà.
         (db.DATA / "originals").mkdir(exist_ok=True)
         (db.DATA / original).write_bytes(data)
         return _public(find(con, activity_id))
+
 
 @router.post("")
 def import_files(files: list[UploadFile]) -> list[dict]:
@@ -94,7 +104,7 @@ def import_files(files: list[UploadFile]) -> list[dict]:
     for file in files:
         name = file.filename or ""
         try:
-            #llegeix un byte de més per detectar els fitxers massa grans sense carregar-los sencers.
+            # llegeix un byte de més per detectar els fitxers massa grans sense carregar-los sencers.
             results.append(
                 {
                     "filename": name,
@@ -105,12 +115,15 @@ def import_files(files: list[UploadFile]) -> list[dict]:
             results.append({"filename": name, "error": str(exc)})
     return results
 
+
 @router.get("")
-def list_activities(q: str = "", date_from: date | None = None, date_to: date | None = None) -> list[dict]:
+def list_activities(
+    q: str = "", date_from: date | None = None, date_to: date | None = None
+) -> list[dict]:
     """Llista de sortides, amb cerca per nom i filtre per data (FR-107)."""
     sql = "SELECT * FROM activities WHERE instr(lower(name), lower(?)) > 0"
     args: list = [q.strip()]
-    #rutes planificades no tenen data: filtre data les deixa fora.
+    # rutes planificades no tenen data: filtre data les deixa fora.
     if date_from:
         sql += " AND substr(started_at, 1, 10) >= ?"
         args.append(date_from.isoformat())
@@ -128,12 +141,16 @@ def list_activities(q: str = "", date_from: date | None = None, date_to: date | 
             "SELECT activity_id, lon, lat, ele_m FROM"
             " (SELECT *, count(*) OVER (PARTITION BY activity_id) AS n FROM points)"
             " WHERE seq % ((n + 399) / 400) = 0 OR seq = n - 1"
-            " ORDER BY activity_id, seq"):
+            " ORDER BY activity_id, seq"
+        ):
             point = [round(lon, 5), round(lat, 5)]
-            lines.setdefault(activity_id, []).append(point if ele is None else [*point, round(ele)])
+            lines.setdefault(activity_id, []).append(
+                point if ele is None else [*point, round(ele)]
+            )
         for activity in activities:
             activity["line"] = lines[activity["id"]]
         return activities
+
 
 @router.get("/{activity_id}")
 def get_activity(activity_id: str) -> dict:
@@ -157,8 +174,12 @@ def get_activity(activity_id: str) -> dict:
         ]
         return activity
 
+
 Text = Annotated[str, StringConstraints(strip_whitespace=True, max_length=10_000)]
-Word = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+Word = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)
+]
+
 
 class ActivityPatch(BaseModel):
     name: Word | None = None
@@ -167,6 +188,7 @@ class ActivityPatch(BaseModel):
     location: Text | None = None
     description: Text | None = None
     tags: list[Word] | None = None
+
 
 @router.patch("/{activity_id}")
 def patch_activity(activity_id: str, patch: ActivityPatch) -> dict:
@@ -189,6 +211,7 @@ def patch_activity(activity_id: str, patch: ActivityPatch) -> dict:
                 {**changes, "id": activity_id},
             )
         return _public(find(con, activity_id))
+
 
 @router.delete("/{activity_id}", status_code=204)
 def delete_activity(activity_id: str) -> None:

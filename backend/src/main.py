@@ -16,13 +16,16 @@ async def lifespan(app: FastAPI):
     db.init()
     yield
 
+
 app = FastAPI(title="entreCims", lifespan=lifespan)
 app.include_router(activities)
 app.include_router(photos)
 
+
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
 
 class SPA(StaticFiles):
     # React Router resol les rutes al navegador, qualsevol ruta desconeguda rep index.html.
@@ -33,6 +36,7 @@ class SPA(StaticFiles):
             if exc.status_code != 404 or path.startswith("api"):
                 raise
             return await super().get_response("index.html", scope)
+
 
 # El Dockerfile hi copia la interfície compilada; en desenvolupament no existeix.
 static = Path(__file__).parent.parent / "static"

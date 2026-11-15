@@ -20,8 +20,10 @@ MAX_BYTES = 30 * 1024 * 1024
 # Només formats que el navegador sap mostrar.
 EXTENSIONS = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp"}
 
+
 class PhotoError(ValueError):
     """La foto no es pot afegir. El missatge es mostra a l'usuari."""
+
 
 def _taken_at(exif: Image.Exif, zone: tzinfo) -> datetime | None:
     details = exif.get_ifd(0x8769)
@@ -38,6 +40,7 @@ def _taken_at(exif: Image.Exif, zone: tzinfo) -> datetime | None:
         pass
     return when.replace(tzinfo=zone).astimezone(UTC)
 
+
 def _gps(exif: Image.Exif) -> tuple[float, float] | None:
     gps = exif.get_ifd(0x8825)
 
@@ -53,6 +56,7 @@ def _gps(exif: Image.Exif) -> tuple[float, float] | None:
     # Algunes càmeres sense senyal escriuen 0, 0.
     valid = abs(lat) <= 90 and abs(lon) <= 180 and (lat, lon) != (0, 0)
     return (lat, lon) if valid else None
+
 
 def read(data: bytes, zone: tzinfo) -> tuple[str, datetime | None, tuple | None]:
     """Extensió, hora (UTC) i posició GPS d'una foto."""
@@ -74,6 +78,7 @@ def read(data: bytes, zone: tzinfo) -> tuple[str, datetime | None, tuple | None]
     except Exception:  # noqa: BLE001 - EXIF malformat: la foto es desa, sense situar.
         return EXTENSIONS[image_format], None, None
 
+
 def interpolate(when: datetime, track: list[tuple]) -> tuple[float, float] | None:
     """Posició en un instant, sobre un track de (hora, lat, lon). None si cau fora de la sortida."""
     if not track or not track[0][0] <= when <= track[-1][0]:
@@ -84,6 +89,7 @@ def interpolate(when: datetime, track: list[tuple]) -> tuple[float, float] | Non
     (t0, lat0, lon0), (t1, lat1, lon1) = track[i - 1], track[i]
     f = (when - t0) / (t1 - t0) if t1 > t0 else 0
     return lat0 + f * (lat1 - lat0), lon0 + f * (lon1 - lon0)
+
 
 @router.post("/activities/{activity_id}/photos")
 def add_photos(
@@ -136,6 +142,7 @@ def add_photos(
             )
             results.append({"filename": name, "photo": photo})
     return results
+
 
 @router.get("/photos/{photo_id}")
 def get_photo(photo_id: str) -> FileResponse:

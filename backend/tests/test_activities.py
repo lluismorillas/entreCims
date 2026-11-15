@@ -25,11 +25,13 @@ def test_import_stores_stats_points_and_the_original(client, tmp_path):
         tmp_path / "originals" / f"{activity['id']}.gpx"
     ).read_bytes() == GPX.encode()
 
+
 def test_duplicate_is_rejected(client):
     upload(client, ("run.gpx", GPX.encode()))
     [again] = upload(client, ("other-name.gpx", GPX.encode()))
     assert "already imported as “Synthetic run”" in again["error"]
     assert len(client.get("/api/activities").json()) == 1
+
 
 def test_batch_with_a_corrupt_file_keeps_working(client, tmp_path):
     results = upload(
@@ -39,6 +41,7 @@ def test_batch_with_a_corrupt_file_keeps_working(client, tmp_path):
     assert [r["activity"]["source_format"] for r in results[1:]] == ["tcx", "fit"]
     assert len(list((tmp_path / "originals").iterdir())) == 2
     assert client.get("/api/health").status_code == 200
+
 
 def test_list_search_and_date_filter(client):
     planned = GPX.replace("<time>2026-01-01T10:01:00Z</time>", "").replace(
@@ -61,6 +64,7 @@ def test_list_search_and_date_filter(client):
         == 422
     )
 
+
 def test_patch_name_and_type(client):
     [result] = upload(client, ("run.gpx", GPX.encode()))
     url = f"/api/activities/{result['activity']['id']}"
@@ -69,6 +73,7 @@ def test_patch_name_and_type(client):
     assert (patched["name"], patched["type"]) == ("Renamed", "hike")
     assert client.patch(url, json={"type": "bike"}).status_code == 422
     assert client.patch(url, json={"name": " "}).status_code == 422
+
 
 def test_details_written_after_the_import(client):
     [result] = upload(client, ("run.gpx", GPX.encode()))
@@ -95,6 +100,7 @@ def test_details_written_after_the_import(client):
     assert client.patch(url, json={"name": None}).json()["name"] == "Synthetic run"
     assert client.patch(url, json={"tags": [" "]}).status_code == 422
 
+
 def test_init_upgrades_an_older_database(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "DATA", tmp_path / "data")
     db.init()
@@ -103,6 +109,7 @@ def test_init_upgrades_an_older_database(tmp_path, monkeypatch):
     db.init()
     with db.session() as con:
         assert con.execute("SELECT tags, author FROM activities").fetchall() == []
+
 
 def test_fast_hike_is_flagged(client):
     # 111 m en 10 s són 40 km/h: massa per a una excursió (FR-106).
@@ -113,6 +120,7 @@ def test_fast_hike_is_flagged(client):
     assert result["activity"]["fast_for_hike"] is True
     url = f"/api/activities/{result['activity']['id']}"
     assert client.patch(url, json={"type": "run"}).json()["fast_for_hike"] is False
+
 
 def test_delete_removes_everything(client, tmp_path):
     [result] = upload(client, ("run.gpx", GPX.encode()))
@@ -125,6 +133,7 @@ def test_delete_removes_everything(client, tmp_path):
         assert con.execute("SELECT count(*) FROM points").fetchone()[0] == 0
     # Un cop eliminada, es pot tornar a importar.
     assert "activity" in upload(client, ("run.gpx", GPX.encode()))[0]
+
 
 def test_unknown_activity(client):
     assert client.get("/api/activities/nope").status_code == 404

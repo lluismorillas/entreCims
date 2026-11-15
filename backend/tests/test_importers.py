@@ -34,6 +34,7 @@ BOMB = """<?xml version="1.0"?>
 <!DOCTYPE gpx [<!ENTITY a "aaaaaaaaaa"><!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;">]>
 <gpx><trk><name>&b;</name></trk></gpx>"""
 
+
 # calcula el CRC (Cyclic Redundancy Check) d'un conjunt de bytes. Per si saber si estan corrompudes
 def fit_crc(data: bytes) -> int:
     table = [0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401,
@@ -43,6 +44,7 @@ def fit_crc(data: bytes) -> int:
         for nibble in (byte & 0xF, byte >> 4):
             crc = (crc >> 4) ^ table[crc & 0xF] ^ table[nibble]
     return crc
+
 
 # crea un exemple de fitxer fit
 def make_fit() -> bytes:
@@ -67,6 +69,7 @@ def make_fit() -> bytes:
     header = struct.pack("<BBHI4sH", 14, 0x10, 2132, len(body), b".FIT", 0)
     return header + body + struct.pack("<H", fit_crc(header + body))
 
+
 # comprova que el resultat de la importació sigui correcte.
 def check_points(track):
     assert len(track.points) == 2
@@ -75,6 +78,7 @@ def check_points(track):
     assert (last.lat, last.ele) == pytest.approx((42.001, 1010.5), abs=0.6)
     assert first.time == datetime(2026, 1, 1, 10, tzinfo=UTC)
     assert track.kind == "activity"
+
 
 def test_gpx():
     track = parse("run.GPX", GPX.encode())
@@ -85,6 +89,7 @@ def test_gpx():
         "gpx",
     )
 
+
 def test_tcx_skips_points_without_position():
     track = parse("hike.tcx", TCX.encode())
     check_points(track)
@@ -93,6 +98,7 @@ def test_tcx_skips_points_without_position():
         "hike",
         "tcx",
     )
+
 
 def test_fit():
     track = parse("Morning.fit", make_fit())
@@ -103,16 +109,19 @@ def test_fit():
         "fit",
     )
 
+
 def test_without_times_is_a_planned_route():
     track = parse(
         "plan.gpx", GPX.replace("<time>2026-01-01T10:01:00Z</time>", "").encode()
     )
     assert track.kind == "planned"
 
+
 def test_gpx_route_points():
     gpx = '<gpx><rte><name>R</name><rtept lat="1" lon="2"/><rtept lat="1.1" lon="2"/></rte></gpx>'
     track = parse("r.gpx", gpx.encode())
     assert (track.name, track.kind, len(track.points)) == ("R", "planned", 2)
+
 
 @pytest.mark.parametrize(
     ("filename", "data", "message"),

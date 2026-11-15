@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 import db
 from main import app
 
+
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "DATA", tmp_path)

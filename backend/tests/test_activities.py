@@ -4,6 +4,7 @@ from test_importers import GPX, TCX, make_fit
 
 import db
 
+
 def test_import_stores_stats_points_and_the_original(client, tmp_path):
     [result] = upload(client, ("run.gpx", GPX.encode()))
     activity = result["activity"]

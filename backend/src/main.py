@@ -9,6 +9,7 @@ import db
 from activities import router as activities
 from photos import router as photos
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # La base de dades existeix des que el servidor arrenca, abans de cap petició.

@@ -8,6 +8,7 @@ from test_importers import GPX
 
 from photos import interpolate
 
+
 # El GPX de prova va de 42.0 a 42.001 de latitud entre les 10:00 i les 10:01 UTC.
 def photo(time=None, offset=None, gps=None, image_format="JPEG"):
     exif = Image.Exif()

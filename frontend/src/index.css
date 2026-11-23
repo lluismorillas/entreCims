@@ -7,7 +7,8 @@
   body {
     @apply bg-slate-950 text-slate-100 antialiased;
   }
-  input:not([type="checkbox"]),
+  /* Not range: the padding and border made the track look longer than the thumb's travel. */
+  input:not([type="checkbox"], [type="range"]),
   select,
   textarea {
     @apply rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 placeholder:text-slate-500;

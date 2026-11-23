@@ -11,6 +11,7 @@ const ICONS = {
   plus: "M5 12h14M12 5v14",
   map: "m9 18-6 3V6l6-3 6 3 6-3v15l-6 3-6-3zM9 3v15M15 6v15",
   list: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
+  flag: "M4 22V4h13l-2 4 2 4H4",
   pin: "M20 10c0 5-8 12-8 12s-8-7-8-12a8 8 0 0 1 16 0zM12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
 };
 export type IconName = keyof typeof ICONS;

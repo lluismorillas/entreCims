@@ -21,6 +21,9 @@ export type RouteInfo = {
   fromApi?: boolean;
   /** Only in the detail of an API route. */
   photos?: Photo[];
+  /** Only in the detail of an API route: peaks within 300 m and why each was reached or not. */
+  peaks?: PeakCandidate[];
+  peaksStatus?: PeaksStatus;
   /** Where the track came from: an imported file, or drawn in the planner. */
   source?: "uploaded" | "drawn";
   location?: string;
@@ -46,6 +49,40 @@ export type Photo = {
   position_source: "exif" | "interpolated" | null;
 };
 
+/** A peak within 300 m of an activity, with the reasons of the detection (FR-209). */
+export type PeakCandidate = {
+  id: number;
+  name: string | null;
+  lat: number;
+  lon: number;
+  ele_m: number | null;
+  detected: boolean;
+  /** "low": the peak has no elevation in OpenStreetMap, so only distance and local high point count. */
+  confidence: "high" | "low";
+  min_dist_m: number;
+  /** Peak elevation minus the highest track point near it. */
+  ele_gap_m: number | null;
+  /** null: the track never came within the distance limit. */
+  is_local_max: boolean | null;
+  first_passed_at: string | null;
+  /** The user's correction, which wins over the detection. null: none. */
+  manual_label: boolean | null;
+  reached: boolean;
+  /** Distance along the track of the first pass. */
+  dist_m: number | null;
+};
+/** "planned": routes are not analysed. "no_peaks": none downloaded yet. */
+export type PeaksStatus = "ok" | "no_peaks" | "no_elevation" | "planned";
+
+export type ReachedPeak = {
+  id: number;
+  name: string | null;
+  lat: number;
+  lon: number;
+  ele_m: number | null;
+  visits: { activity_id: string; activity_name: string; first_passed_at: string | null }[];
+};
+
 /** An activity as the API returns it (backend/src/activities.py). */
 type Activity = {
   id: string;
@@ -68,6 +105,8 @@ type Activity = {
   /** Detail: every point as [lon, lat, ele, dist, time]. */
   points?: [number, number, number | null, number, string | null][];
   photos?: Photo[];
+  peaks?: PeakCandidate[];
+  peaks_status?: PeaksStatus;
 };
 
 export type ImportResult = { filename: string; activity?: Activity; error?: string };
@@ -141,16 +180,31 @@ function toRoute(a: Activity, line: number[][]): RouteInfo {
     movingS: a.moving_s,
     fromApi: true,
     photos: a.photos,
+    peaks: a.peaks,
+    peaksStatus: a.peaks_status,
     source: "uploaded",
     line,
   };
 }
 
+/** The server's own message when it gives one, such as a validation error. */
+async function failure(response: Response) {
+  const detail = await response.json().then((b) => b.detail, () => null);
+  const message = typeof detail === "string" ? detail : detail?.[0]?.msg?.replace(/^Value error, /, "");
+  return new Error(message || `The server answered ${response.status}.`);
+}
+
 async function api(path: string, init?: RequestInit) {
   const response = await fetch(`/api/${path}`, init);
-  if (!response.ok) throw new Error(`The server answered ${response.status}.`);
+  if (!response.ok) throw await failure(response);
   return response.status === 204 ? null : response.json();
 }
+
+const json = (method: string, body: unknown): RequestInit => ({
+  method,
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body),
+});
 
 /** Every route: the activities of the API, then the ones drawn in this browser. */
 export function useRoutes() {
@@ -211,15 +265,81 @@ export type RouteEdit = {
 
 /** Changes the given fields of an API route and returns them as the server stored them. */
 export async function updateRoute(id: string, edit: RouteEdit) {
-  const a: Activity = await api(`activities/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...edit, type: edit.type === "trail" ? "trail_run" : edit.type }),
-  });
+  const a: Activity = await api(
+    `activities/${encodeURIComponent(id)}`,
+    json("PATCH", { ...edit, type: edit.type === "trail" ? "trail_run" : edit.type }),
+  );
   return editable(a);
 }
 
 export const deleteRoute = (id: string) => api(`activities/${encodeURIComponent(id)}`, { method: "DELETE" });
+
+/** Confirms (true) or rejects (false) a peak of a route, or goes back to the detection (null). FR-208. */
+export const labelPeak = (routeId: string, peakId: number, reached: boolean | null): Promise<PeakCandidate> =>
+  api(`activities/${encodeURIComponent(routeId)}/peaks/${peakId}`, json("PUT", { reached }));
+
+/** Every reached peak with its visits (FR-207). `reload` fetches them again. */
+export function useReachedPeaks() {
+  const [peaks, setPeaks] = useState<ReachedPeak[] | null>(null);
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    api("peaks/reached").then(setPeaks, () => setPeaks([]));
+  }, [version]);
+  return [peaks, () => setVersion((v) => v + 1)] as const;
+}
+
+export type DownloadProgress =
+  | { stage: "download" }
+  | { stage: "saved"; peaks: number; merged: number }
+  | { stage: "analyse"; done: number; total: number }
+  | { stage: "done" };
+
+/** Downloads the peaks of a box and re-analyses every activity, reporting each step (FR-201). */
+export const downloadPeaks = (
+  region: { south: number; west: number; north: number; east: number },
+  onProgress: (p: DownloadProgress) => void,
+) => streamPeaks("peaks/download", region, onProgress);
+
+/** The same, for an administrative area by its name, such as a comarca. */
+export const downloadPeaksArea = (name: string, onProgress: (p: DownloadProgress) => void) =>
+  streamPeaks("peaks/download-area", { name }, onProgress);
+
+/** Areas whose peaks can be downloaded by name (backend/src/areas.json). */
+export type PeakArea = { name: string; kind: string; relation: number };
+export function usePeakAreas() {
+  const [areas, setAreas] = useState<PeakArea[]>([]);
+  useEffect(() => {
+    api("peaks/areas").then(setAreas, () => setAreas([]));
+  }, []);
+  return areas;
+}
+
+async function streamPeaks(path: string, body: unknown, onProgress: (p: DownloadProgress) => void) {
+  const response = await fetch(`/api/${path}`, json("POST", body));
+  if (!response.ok) throw await failure(response);
+  // One JSON object per line, sent as each step finishes.
+  const reader = response.body!.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) return;
+    const lines = (buffer + value).split("\n");
+    buffer = lines.pop()!;
+    for (const line of lines.filter(Boolean)) {
+      const step = JSON.parse(line);
+      if (step.error) throw new Error(step.error);
+      onProgress(step);
+    }
+  }
+}
+
+/** The peaks of a route as the server has them now, e.g. after downloading the peaks around it. */
+export async function routePeaks(id: string) {
+  const a: Activity = await api(`activities/${encodeURIComponent(id)}`);
+  return { peaks: a.peaks, peaksStatus: a.peaks_status };
+}
+
+export const rerunAnalysis =(): Promise<{ activities: number }> => api("analysis/rerun", { method: "POST" });
 
 export function useLists() {
   const [lists, setLists] = useState(() => load<RouteList>("entrecims.lists"));

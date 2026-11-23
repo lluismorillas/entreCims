@@ -1,0 +1,1207 @@
+[
+{
+"name": "Andalucía",
+"kind": "Comunitat autònoma",
+"relation": 349044
+},
+{
+"name": "Aragón",
+"kind": "Comunitat autònoma",
+"relation": 349045
+},
+{
+"name": "Asturias / Asturies",
+"kind": "Comunitat autònoma",
+"relation": 349033
+},
+{
+"name": "Canarias",
+"kind": "Comunitat autònoma",
+"relation": 349048
+},
+{
+"name": "Cantabria",
+"kind": "Comunitat autònoma",
+"relation": 349013
+},
+{
+"name": "Castilla y León",
+"kind": "Comunitat autònoma",
+"relation": 349041
+},
+{
+"name": "Castilla-La Mancha",
+"kind": "Comunitat autònoma",
+"relation": 349052
+},
+{
+"name": "Catalunya",
+"kind": "Comunitat autònoma",
+"relation": 349053
+},
+{
+"name": "Ceuta",
+"kind": "Comunitat autònoma",
+"relation": 1154756
+},
+{
+"name": "Comunidad de Madrid",
+"kind": "Comunitat autònoma",
+"relation": 349055
+},
+{
+"name": "Comunitat Valenciana",
+"kind": "Comunitat autònoma",
+"relation": 349043
+},
+{
+"name": "Euskadi",
+"kind": "Comunitat autònoma",
+"relation": 349042
+},
+{
+"name": "Extremadura",
+"kind": "Comunitat autònoma",
+"relation": 349050
+},
+{
+"name": "Galicia",
+"kind": "Comunitat autònoma",
+"relation": 349036
+},
+{
+"name": "Illes Balears",
+"kind": "Comunitat autònoma",
+"relation": 348981
+},
+{
+"name": "Melilla",
+"kind": "Comunitat autònoma",
+"relation": 1154757
+},
+{
+"name": "Navarra / Nafarroa",
+"kind": "Comunitat autònoma",
+"relation": 349027
+},
+{
+"name": "Región de Murcia",
+"kind": "Comunitat autònoma",
+"relation": 349047
+},
+{
+"name": "La Rioja",
+"kind": "Comunitat autònoma",
+"relation": 348991
+},
+{
+"name": "Ariège",
+"kind": "Departament (França)",
+"relation": 7439
+},
+{
+"name": "Aude",
+"kind": "Departament (França)",
+"relation": 7446
+},
+{
+"name": "Haute-Garonne",
+"kind": "Departament (França)",
+"relation": 7413
+},
+{
+"name": "Hautes-Pyrénées",
+"kind": "Departament (França)",
+"relation": 7467
+},
+{
+"name": "Pyrénées-Atlantiques",
+"kind": "Departament (França)",
+"relation": 7450
+},
+{
+"name": "Pyrénées-Orientales",
+"kind": "Departament (França)",
+"relation": 7466
+},
+{
+"name": "Afganistan",
+"kind": "País",
+"relation": 303427
+},
+{
+"name": "Albània",
+"kind": "País",
+"relation": 53292
+},
+{
+"name": "Alemanya",
+"kind": "País",
+"relation": 51477
+},
+{
+"name": "Algèria",
+"kind": "País",
+"relation": 192756
+},
+{
+"name": "Andorra",
+"kind": "País",
+"relation": 9407
+},
+{
+"name": "Angola",
+"kind": "País",
+"relation": 195267
+},
+{
+"name": "Anguilla",
+"kind": "País",
+"relation": 2177161
+},
+{
+"name": "Antigua i Barbuda",
+"kind": "País",
+"relation": 536900
+},
+{
+"name": "Argentina",
+"kind": "País",
+"relation": 286393
+},
+{
+"name": "Armènia",
+"kind": "País",
+"relation": 364066
+},
+{
+"name": "Aràbia Saudita",
+"kind": "País",
+"relation": 307584
+},
+{
+"name": "Austràlia",
+"kind": "País",
+"relation": 80500
+},
+{
+"name": "Azerbaidjan",
+"kind": "País",
+"relation": 364110
+},
+{
+"name": "Bahames",
+"kind": "País",
+"relation": 547469
+},
+{
+"name": "Bahrain",
+"kind": "País",
+"relation": 378734
+},
+{
+"name": "Bangla Desh",
+"kind": "País",
+"relation": 184640
+},
+{
+"name": "Barbados",
+"kind": "País",
+"relation": 547511
+},
+{
+"name": "Belize",
+"kind": "País",
+"relation": 287827
+},
+{
+"name": "Benín",
+"kind": "País",
+"relation": 192784
+},
+{
+"name": "Bermudes",
+"kind": "País",
+"relation": 1993208
+},
+{
+"name": "Bhutan",
+"kind": "País",
+"relation": 184629
+},
+{
+"name": "Bielorússia",
+"kind": "País",
+"relation": 59065
+},
+{
+"name": "Bolívia",
+"kind": "País",
+"relation": 252645
+},
+{
+"name": "Botswana",
+"kind": "País",
+"relation": 1889339
+},
+{
+"name": "Brasil",
+"kind": "País",
+"relation": 59470
+},
+{
+"name": "Brunei",
+"kind": "País",
+"relation": 2103120
+},
+{
+"name": "Bulgària",
+"kind": "País",
+"relation": 186382
+},
+{
+"name": "Burkina Faso",
+"kind": "País",
+"relation": 192783
+},
+{
+"name": "Burundi",
+"kind": "País",
+"relation": 195269
+},
+{
+"name": "Bèlgica",
+"kind": "País",
+"relation": 52411
+},
+{
+"name": "Bòsnia i Hercegovina",
+"kind": "País",
+"relation": 2528142
+},
+{
+"name": "Cambodja",
+"kind": "País",
+"relation": 49898
+},
+{
+"name": "Camerun",
+"kind": "País",
+"relation": 192830
+},
+{
+"name": "Canadà",
+"kind": "País",
+"relation": 1428125
+},
+{
+"name": "Cap Verd",
+"kind": "País",
+"relation": 535774
+},
+{
+"name": "Ciutat del Vaticà",
+"kind": "País",
+"relation": 36989
+},
+{
+"name": "Colòmbia",
+"kind": "País",
+"relation": 120027
+},
+{
+"name": "Comores",
+"kind": "País",
+"relation": 535790
+},
+{
+"name": "Congo",
+"kind": "País",
+"relation": 192794
+},
+{
+"name": "Corea del Nord",
+"kind": "País",
+"relation": 192734
+},
+{
+"name": "Corea del Sud",
+"kind": "País",
+"relation": 307756
+},
+{
+"name": "Costa Rica",
+"kind": "País",
+"relation": 287667
+},
+{
+"name": "Costa d'Ivori",
+"kind": "País",
+"relation": 192779
+},
+{
+"name": "Croàcia",
+"kind": "País",
+"relation": 214885
+},
+{
+"name": "Cuba",
+"kind": "País",
+"relation": 307833
+},
+{
+"name": "Dinamarca",
+"kind": "País",
+"relation": 50046
+},
+{
+"name": "Djibouti",
+"kind": "País",
+"relation": 192801
+},
+{
+"name": "Dominica",
+"kind": "País",
+"relation": 307823
+},
+{
+"name": "Egipte",
+"kind": "País",
+"relation": 1473947
+},
+{
+"name": "El Salvador",
+"kind": "País",
+"relation": 1520612
+},
+{
+"name": "Emirats Àrabs Units",
+"kind": "País",
+"relation": 307763
+},
+{
+"name": "Equador",
+"kind": "País",
+"relation": 108089
+},
+{
+"name": "Eritrea",
+"kind": "País",
+"relation": 296961
+},
+{
+"name": "Eslovàquia",
+"kind": "País",
+"relation": 14296
+},
+{
+"name": "Eslovènia",
+"kind": "País",
+"relation": 218657
+},
+{
+"name": "Espanya",
+"kind": "País",
+"relation": 1311341
+},
+{
+"name": "Estats Units d'Amèrica",
+"kind": "País",
+"relation": 148838
+},
+{
+"name": "Estònia",
+"kind": "País",
+"relation": 79510
+},
+{
+"name": "Eswatini",
+"kind": "País",
+"relation": 88210
+},
+{
+"name": "Etiòpia",
+"kind": "País",
+"relation": 192800
+},
+{
+"name": "Fiji",
+"kind": "País",
+"relation": 571747
+},
+{
+"name": "Filipines",
+"kind": "País",
+"relation": 443174
+},
+{
+"name": "Finlàndia",
+"kind": "País",
+"relation": 54224
+},
+{
+"name": "França",
+"kind": "País",
+"relation": 2202162
+},
+{
+"name": "Gabon",
+"kind": "País",
+"relation": 192793
+},
+{
+"name": "Geòrgia",
+"kind": "País",
+"relation": 28699
+},
+{
+"name": "Ghana",
+"kind": "País",
+"relation": 192781
+},
+{
+"name": "Gibraltar",
+"kind": "País",
+"relation": 1278736
+},
+{
+"name": "Grenada",
+"kind": "País",
+"relation": 550727
+},
+{
+"name": "Groenlàndia",
+"kind": "País",
+"relation": 2184073
+},
+{
+"name": "Grècia",
+"kind": "País",
+"relation": 192307
+},
+{
+"name": "Guatemala",
+"kind": "País",
+"relation": 1521463
+},
+{
+"name": "Guernsey",
+"kind": "País",
+"relation": 270009
+},
+{
+"name": "Guinea",
+"kind": "País",
+"relation": 192778
+},
+{
+"name": "Guinea Bissau",
+"kind": "País",
+"relation": 192776
+},
+{
+"name": "Guinea Equatorial",
+"kind": "País",
+"relation": 192791
+},
+{
+"name": "Guyana",
+"kind": "País",
+"relation": 287083
+},
+{
+"name": "Gàmbia",
+"kind": "País",
+"relation": 192774
+},
+{
+"name": "Haití",
+"kind": "País",
+"relation": 307829
+},
+{
+"name": "Hondures",
+"kind": "País",
+"relation": 287670
+},
+{
+"name": "Hongria",
+"kind": "País",
+"relation": 21335
+},
+{
+"name": "Iemen",
+"kind": "País",
+"relation": 305092
+},
+{
+"name": "Illa de Man",
+"kind": "País",
+"relation": 62269
+},
+{
+"name": "Illa de Montserrat",
+"kind": "País",
+"relation": 537257
+},
+{
+"name": "Illes Caiman",
+"kind": "País",
+"relation": 2185366
+},
+{
+"name": "Illes Cook",
+"kind": "País",
+"relation": 2184233
+},
+{
+"name": "Illes Fèroe",
+"kind": "País",
+"relation": 52939
+},
+{
+"name": "Illes Geòrgia del Sud i Sandwich del Sud",
+"kind": "País",
+"relation": 1983628
+},
+{
+"name": "Illes Malvines",
+"kind": "País",
+"relation": 2185374
+},
+{
+"name": "Illes Marshall",
+"kind": "País",
+"relation": 571771
+},
+{
+"name": "Illes Pitcairn",
+"kind": "País",
+"relation": 2185375
+},
+{
+"name": "Illes Turks i Caicos",
+"kind": "País",
+"relation": 547479
+},
+{
+"name": "Illes Verges Britàniques",
+"kind": "País",
+"relation": 285454
+},
+{
+"name": "Indonèsia",
+"kind": "País",
+"relation": 304751
+},
+{
+"name": "Iran",
+"kind": "País",
+"relation": 304938
+},
+{
+"name": "Iraq",
+"kind": "País",
+"relation": 304934
+},
+{
+"name": "Irlanda",
+"kind": "País",
+"relation": 62273
+},
+{
+"name": "Islàndia",
+"kind": "País",
+"relation": 299133
+},
+{
+"name": "Israel",
+"kind": "País",
+"relation": 1473946
+},
+{
+"name": "Itàlia",
+"kind": "País",
+"relation": 365331
+},
+{
+"name": "Jamaica",
+"kind": "País",
+"relation": 555017
+},
+{
+"name": "Japó",
+"kind": "País",
+"relation": 382313
+},
+{
+"name": "Jersey",
+"kind": "País",
+"relation": 367988
+},
+{
+"name": "Jordània",
+"kind": "País",
+"relation": 184818
+},
+{
+"name": "Kazakhstan",
+"kind": "País",
+"relation": 214665
+},
+{
+"name": "Kenya",
+"kind": "País",
+"relation": 192798
+},
+{
+"name": "Kirguizistan",
+"kind": "País",
+"relation": 178009
+},
+{
+"name": "Kiribati",
+"kind": "País",
+"relation": 571178
+},
+{
+"name": "Kosovo",
+"kind": "País",
+"relation": 2088990
+},
+{
+"name": "Kuwait",
+"kind": "País",
+"relation": 305099
+},
+{
+"name": "Laos",
+"kind": "País",
+"relation": 49903
+},
+{
+"name": "Lesotho",
+"kind": "País",
+"relation": 2093234
+},
+{
+"name": "Letònia",
+"kind": "País",
+"relation": 72594
+},
+{
+"name": "Libèria",
+"kind": "País",
+"relation": 192780
+},
+{
+"name": "Liechtenstein",
+"kind": "País",
+"relation": 1155955
+},
+{
+"name": "Lituània",
+"kind": "País",
+"relation": 72596
+},
+{
+"name": "Luxemburg",
+"kind": "País",
+"relation": 2171347
+},
+{
+"name": "Líban",
+"kind": "País",
+"relation": 184843
+},
+{
+"name": "Líbia",
+"kind": "País",
+"relation": 192758
+},
+{
+"name": "Macedònia del Nord",
+"kind": "País",
+"relation": 53293
+},
+{
+"name": "Madagascar",
+"kind": "País",
+"relation": 447325
+},
+{
+"name": "Malawi",
+"kind": "País",
+"relation": 195290
+},
+{
+"name": "Maldives",
+"kind": "País",
+"relation": 536773
+},
+{
+"name": "Mali",
+"kind": "País",
+"relation": 192785
+},
+{
+"name": "Malta",
+"kind": "País",
+"relation": 365307
+},
+{
+"name": "Malàisia",
+"kind": "País",
+"relation": 2108121
+},
+{
+"name": "Marroc",
+"kind": "País",
+"relation": 3630439
+},
+{
+"name": "Maurici",
+"kind": "País",
+"relation": 535828
+},
+{
+"name": "Mauritània",
+"kind": "País",
+"relation": 192763
+},
+{
+"name": "Micronèsia",
+"kind": "País",
+"relation": 571802
+},
+{
+"name": "Moldàvia",
+"kind": "País",
+"relation": 58974
+},
+{
+"name": "Mongòlia",
+"kind": "País",
+"relation": 161033
+},
+{
+"name": "Montenegro",
+"kind": "País",
+"relation": 53296
+},
+{
+"name": "Moçambic",
+"kind": "País",
+"relation": 195273
+},
+{
+"name": "Myanmar",
+"kind": "País",
+"relation": 50371
+},
+{
+"name": "Mèxic",
+"kind": "País",
+"relation": 114686
+},
+{
+"name": "Mònaco",
+"kind": "País",
+"relation": 1124039
+},
+{
+"name": "Namíbia",
+"kind": "País",
+"relation": 195266
+},
+{
+"name": "Nauru",
+"kind": "País",
+"relation": 571804
+},
+{
+"name": "Nepal",
+"kind": "País",
+"relation": 184633
+},
+{
+"name": "Nicaragua",
+"kind": "País",
+"relation": 287666
+},
+{
+"name": "Nigèria",
+"kind": "País",
+"relation": 192787
+},
+{
+"name": "Niue",
+"kind": "País",
+"relation": 1558556
+},
+{
+"name": "Noruega",
+"kind": "País",
+"relation": 2978650
+},
+{
+"name": "Nova Zelanda",
+"kind": "País",
+"relation": 556706
+},
+{
+"name": "Níger",
+"kind": "País",
+"relation": 192786
+},
+{
+"name": "Oman",
+"kind": "País",
+"relation": 305138
+},
+{
+"name": "Pakistan",
+"kind": "País",
+"relation": 307573
+},
+{
+"name": "Palau",
+"kind": "País",
+"relation": 571805
+},
+{
+"name": "Panamà",
+"kind": "País",
+"relation": 287668
+},
+{
+"name": "Papua Nova Guinea",
+"kind": "País",
+"relation": 307866
+},
+{
+"name": "Paraguai",
+"kind": "País",
+"relation": 287077
+},
+{
+"name": "Països Baixos",
+"kind": "País",
+"relation": 2323309
+},
+{
+"name": "Perú",
+"kind": "País",
+"relation": 288247
+},
+{
+"name": "Polònia",
+"kind": "País",
+"relation": 49715
+},
+{
+"name": "Portugal",
+"kind": "País",
+"relation": 295480
+},
+{
+"name": "Qatar",
+"kind": "País",
+"relation": 305095
+},
+{
+"name": "Regne Unit",
+"kind": "País",
+"relation": 62149
+},
+{
+"name": "República Centreafricana",
+"kind": "País",
+"relation": 192790
+},
+{
+"name": "República Democràtica del Congo",
+"kind": "País",
+"relation": 192795
+},
+{
+"name": "República Dominicana",
+"kind": "País",
+"relation": 307828
+},
+{
+"name": "Romania",
+"kind": "País",
+"relation": 90689
+},
+{
+"name": "Rwanda",
+"kind": "País",
+"relation": 171496
+},
+{
+"name": "Rússia",
+"kind": "País",
+"relation": 60189
+},
+{
+"name": "Saint Kitts i Nevis",
+"kind": "País",
+"relation": 536899
+},
+{
+"name": "Saint Lucia",
+"kind": "País",
+"relation": 550728
+},
+{
+"name": "Saint Vincent i les Grenadines",
+"kind": "País",
+"relation": 550725
+},
+{
+"name": "Salomó",
+"kind": "País",
+"relation": 1857436
+},
+{
+"name": "Samoa",
+"kind": "País",
+"relation": 1872673
+},
+{
+"name": "San Marino",
+"kind": "País",
+"relation": 54624
+},
+{
+"name": "Santa Helena, Ascensió i Tristan da Cunha",
+"kind": "País",
+"relation": 1964272
+},
+{
+"name": "Senegal",
+"kind": "País",
+"relation": 192775
+},
+{
+"name": "Seychelles",
+"kind": "País",
+"relation": 536765
+},
+{
+"name": "Sierra Leone",
+"kind": "País",
+"relation": 192777
+},
+{
+"name": "Singapur",
+"kind": "País",
+"relation": 536780
+},
+{
+"name": "Somàlia",
+"kind": "País",
+"relation": 192799
+},
+{
+"name": "Sri Lanka",
+"kind": "País",
+"relation": 536807
+},
+{
+"name": "Sud-àfrica",
+"kind": "País",
+"relation": 87565
+},
+{
+"name": "Sudan",
+"kind": "País",
+"relation": 192789
+},
+{
+"name": "Sudan del Sud",
+"kind": "País",
+"relation": 1656678
+},
+{
+"name": "Surinam",
+"kind": "País",
+"relation": 287082
+},
+{
+"name": "Suècia",
+"kind": "País",
+"relation": 52822
+},
+{
+"name": "Suïssa",
+"kind": "País",
+"relation": 51701
+},
+{
+"name": "São Tomé i Príncipe",
+"kind": "País",
+"relation": 535880
+},
+{
+"name": "Sèrbia",
+"kind": "País",
+"relation": 1741311
+},
+{
+"name": "Síria",
+"kind": "País",
+"relation": 184840
+},
+{
+"name": "Tadjikistan",
+"kind": "País",
+"relation": 214626
+},
+{
+"name": "Tailàndia",
+"kind": "País",
+"relation": 2067731
+},
+{
+"name": "Taiwan",
+"kind": "País",
+"relation": 449220
+},
+{
+"name": "Tanzània",
+"kind": "País",
+"relation": 195270
+},
+{
+"name": "Territori Britànic de l'Oceà Índic",
+"kind": "País",
+"relation": 1993867
+},
+{
+"name": "Timor Oriental",
+"kind": "País",
+"relation": 305142
+},
+{
+"name": "Togo",
+"kind": "País",
+"relation": 192782
+},
+{
+"name": "Tokelau",
+"kind": "País",
+"relation": 2186600
+},
+{
+"name": "Tonga",
+"kind": "País",
+"relation": 2186665
+},
+{
+"name": "Trinitat i Tobago",
+"kind": "País",
+"relation": 555717
+},
+{
+"name": "Tunísia",
+"kind": "País",
+"relation": 192757
+},
+{
+"name": "Turkmenistan",
+"kind": "País",
+"relation": 223026
+},
+{
+"name": "Turquia",
+"kind": "País",
+"relation": 174737
+},
+{
+"name": "Tuvalu",
+"kind": "País",
+"relation": 2177266
+},
+{
+"name": "Txad",
+"kind": "País",
+"relation": 2361304
+},
+{
+"name": "Txèquia",
+"kind": "País",
+"relation": 51684
+},
+{
+"name": "Ucraïna",
+"kind": "País",
+"relation": 60199
+},
+{
+"name": "Uganda",
+"kind": "País",
+"relation": 192796
+},
+{
+"name": "Uruguai",
+"kind": "País",
+"relation": 287072
+},
+{
+"name": "Uzbekistan",
+"kind": "País",
+"relation": 196240
+},
+{
+"name": "Vanuatu",
+"kind": "País",
+"relation": 2177246
+},
+{
+"name": "Veneçuela",
+"kind": "País",
+"relation": 272644
+},
+{
+"name": "Vietnam",
+"kind": "País",
+"relation": 49915
+},
+{
+"name": "Xile",
+"kind": "País",
+"relation": 167454
+},
+{
+"name": "Xina",
+"kind": "País",
+"relation": 270056
+},
+{
+"name": "Xipre",
+"kind": "País",
+"relation": 307787
+},
+{
+"name": "Zimbabwe",
+"kind": "País",
+"relation": 195272
+},
+{
+"name": "Zàmbia",
+"kind": "País",
+"relation": 195271
+},
+{
+"name": "Àustria",
+"kind": "País",
+"relation": 16239
+},
+{
+"name": "Índia",
+"kind": "País",
+"relation": 304716
+}
+]

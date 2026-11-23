@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException, UploadFile
 from pydantic import BaseModel, StringConstraints
 
 import db
+import peaks
 from analysis import analyse
 from importers import MAX_BYTES, TrackError, parse
 
@@ -91,6 +92,8 @@ def _import(filename: str, data: bytes) -> dict:
                 for seq, p in enumerate(stats.points)
             ),
         )
+        if track.kind == "activity":
+            peaks.detect(con, activity_id)  # FR-202
         # original es conserva sense modificar. Si no es pot desar, la sessió es desfà.
         (db.DATA / "originals").mkdir(exist_ok=True)
         (db.DATA / original).write_bytes(data)
@@ -154,9 +157,10 @@ def list_activities(
 
 @router.get("/{activity_id}")
 def get_activity(activity_id: str) -> dict:
-    """Detall amb tots els punts, com a [lon, lat, ele_m, dist_m, time], i les fotos."""
+    """Detall amb tots els punts, com a [lon, lat, ele_m, dist_m, time], les fotos i els cims."""
     with db.session() as con:
         activity = _public(find(con, activity_id))
+        activity |= peaks.for_activity(con, activity)
         activity["points"] = [
             tuple(row)
             for row in con.execute(

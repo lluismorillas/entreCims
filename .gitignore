@@ -1,26 +1,23 @@
-# ─────────────────────────────────────────────
-# Dades personals (principi III de la constitució)
-# ─────────────────────────────────────────────
-# Dades de l'aplicació: SQLite, originals i fotos
+# dades
 data/
-# Tracks reals per a l'avaluació
+# trakcs test
 eval/private/
 
 /sample-data
 
-# Xarxa de seguretat: cap track real fora de sample-data/
+# tracks
 *.gpx
 *.fit
 *.tcx
 !sample-data/**/*.gpx
 !sample-data/**/*.fit
 !sample-data/**/*.tcx
-# Fixtures sintètiques de les proves
+# proves
 !backend/tests/**/*.gpx
 !backend/tests/**/*.fit
 !backend/tests/**/*.tcx
 
-# Bases de dades locals fora de data/
+# Bases de dades locals
 *.db
 *.sqlite
 *.sqlite3
@@ -34,9 +31,7 @@ eval/private/
 .specify/
 specs/
 
-# ─────────────────────────────────────────────
 # Frontend (Node, Vite)
-# ─────────────────────────────────────────────
 node_modules/
 dist/
 dist-ssr/
@@ -48,9 +43,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# ─────────────────────────────────────────────
 # Backend (Python)
-# ─────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 .venv/
@@ -63,16 +56,12 @@ htmlcov/
 *.egg-info/
 build/
 
-# ─────────────────────────────────────────────
-# Secrets i configuració local
-# ─────────────────────────────────────────────
+# env
 .env
 .env.*
 !.env.example
 
-# ─────────────────────────────────────────────
-# Editor i sistema
-# ─────────────────────────────────────────────
+# altres
 .vscode/*
 !.vscode/extensions.json
 .idea/

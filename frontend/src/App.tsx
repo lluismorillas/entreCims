@@ -3,12 +3,14 @@ import Icon from "./components/Icon";
 import Home from "./views/Home";
 import Lists from "./views/Lists";
 import NewRoute from "./views/NewRoute";
+import Peaks from "./views/Peaks";
 import RouteDetail from "./views/RouteDetail";
 import RoutesView from "./views/Routes";
 
 const LINKS = [
   ["/", "Home", "home"],
   ["/routes", "Routes", "map"],
+  ["/peaks", "Peaks", "flag"],
   ["/lists", "Lists", "list"],
 ] as const;
 
@@ -52,6 +54,7 @@ function App() {
           <Route path="/new" element={<NewRoute />} />
           <Route path="/routes" element={<RoutesView />} />
           <Route path="/routes/:id" element={<RouteDetail />} />
+          <Route path="/peaks" element={<Peaks />} />
           <Route path="/lists" element={<Lists />} />
         </Routes>
       </main>

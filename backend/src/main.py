@@ -1,3 +1,4 @@
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -6,7 +7,9 @@ from starlette.exceptions import HTTPException
 from starlette.staticfiles import StaticFiles
 
 import db
+import peaks as peak_data
 from activities import router as activities
+from peaks import router as peaks
 from photos import router as photos
 
 
@@ -14,12 +17,15 @@ from photos import router as photos
 async def lifespan(app: FastAPI):
     # La base de dades existeix des que el servidor arrenca, abans de cap petició.
     db.init()
+    # En segon pla: el servidor respon mentre es descarreguen els cims de la regió per defecte.
+    threading.Thread(target=peak_data.download_default, daemon=True).start()
     yield
 
 
 app = FastAPI(title="entreCims", lifespan=lifespan)
 app.include_router(activities)
 app.include_router(photos)
+app.include_router(peaks)
 
 
 @app.get("/api/health")

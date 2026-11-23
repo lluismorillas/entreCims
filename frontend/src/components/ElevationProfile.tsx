@@ -11,9 +11,11 @@ type Props = {
   /** Real length of the route: a simplified line cuts corners and measures shorter. */
   totalM: number;
   onHover: (position: number[] | null) => void;
+  /** Points to label on the profile, such as the reached peaks. */
+  marks?: { distM: number; label: string }[];
 };
 
-export default function ElevationProfile({ line, totalM, onHover }: Props) {
+export default function ElevationProfile({ line, totalM, onHover, marks = [] }: Props) {
   const [active, setActive] = useState<number | null>(null);
   const dist = useMemo(() => {
     const cumulative = [0];
@@ -74,6 +76,18 @@ export default function ElevationProfile({ line, totalM, onHover }: Props) {
       ))}
       <path d={`${path}L${x(total)},${y(lo)}L${x(0)},${y(lo)}Z`} className="fill-sky-400/15" />
       <path d={path} className="fill-none stroke-sky-400 stroke-2 [stroke-linejoin:round]" />
+      {marks.map((m) => {
+        const i = Math.max(0, dist.findIndex((v) => v >= m.distM));
+        const [mx, my] = [x(dist[i]), y(eles[i])];
+        return (
+          <g key={`${m.label}${m.distM}`}>
+            <path d={`M${mx},${my - 4}l-5,-9h10z`} className="fill-rose-500 stroke-slate-950" />
+            <text x={mx} y={Math.max(my - 16, 10)} textAnchor="middle" className="fill-slate-100">
+              {m.label}
+            </text>
+          </g>
+        );
+      })}
       {active != null && (
         <g>
           <line x1={x(dist[active])} x2={x(dist[active])} y1={PAD.top} y2={y(lo)} className="stroke-slate-400" />

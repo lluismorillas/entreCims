@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { distance, trackStats } from "../src/data.ts";
+import { reaches } from "../src/routing.ts";
 
 test("distance: one degree of latitude", () => {
   assert.ok(Math.abs(distance([0, 0], [0, 1]) - 111195) < 10);
@@ -38,4 +39,12 @@ test("straightLine: keeps both ends and adds a point about every 30 m", () => {
   const line = straightLine([0, 0], [0, 0.001], 111);
   assert.equal(line.length, 5);
   assert.deepEqual([line[0], line.at(-1)], [[0, 0], [0, 0.001]]);
+});
+
+test("reaches: a path that stops short of the clicked summit does not count", () => {
+  const dLat = 100 / 111195;
+  const from = [1.4, 42.6];
+  const summit = [1.4, 42.6 + 10 * dLat];
+  assert.ok(reaches([from, [1.4, 42.6 + 9.7 * dLat]], from, summit)); // 30 m short
+  assert.ok(!reaches([from, [1.4, 42.6 + 8.6 * dLat]], from, summit)); // 140 m short, as T4 on Pica d'Estats
 });

@@ -38,6 +38,13 @@ export function straightLine(a: number[], b: number[], metres: number) {
   ]);
 }
 
+/** Whether a path starts and ends within 50 m of the clicked points, instead of stopping short. */
+export function reaches(line: number[][], from: number[], to: number[]) {
+  const metres = ([lon1, lat1]: number[], [lon2, lat2]: number[]) =>
+    6371000 * Math.hypot(((lon2 - lon1) * Math.PI * Math.cos((lat1 * Math.PI) / 180)) / 180, ((lat2 - lat1) * Math.PI) / 180);
+  return metres(line[0], from) <= 50 && metres(line.at(-1)!, to) <= 50;
+}
+
 async function valhalla(path: string, body: unknown) {
   // No Content-Type header: a plain-text POST needs no CORS preflight.
   const res = await fetch(VALHALLA_URL + path, { method: "POST", body: JSON.stringify(body) });
@@ -58,24 +65,26 @@ export async function routeLeg(
 ) {
   let line: number[][] | null = null;
   let shape: object = {};
-  if (followPaths && VALHALLA_URL) {
+  // Valhalla's default (1) refuses anything harder than a marked hiking path. T4 (alpine hiking)
+  // comes first so an easy path wins; if it cannot reach the clicked points, as on Pica d'Estats,
+  // whose last stretch is T5, T6 is tried.
+  for (const difficulty of followPaths && VALHALLA_URL ? [4, 6] : []) {
     try {
       const data = await valhalla("/route", {
         directions_type: "none",
         locations: [from, to].map(([lon, lat]) => ({ lon, lat })),
         costing,
-        // Valhalla's default (1) refuses anything harder than a marked hiking path;
-        // 4 allows up to alpine hiking (SAC T4), which mountain routes need.
-        costing_options: { pedestrian: { max_hiking_difficulty: 4 } },
+        costing_options: { pedestrian: { max_hiking_difficulty: difficulty } },
       });
       const encoded = data?.trip?.legs?.[0]?.shape;
       const decoded = typeof encoded === "string" ? decodePolyline(encoded) : [];
       if (decoded.length > 1) {
         line = decoded;
         shape = { encoded_polyline: encoded, shape_format: "polyline6" };
+        if (reaches(decoded, from, to)) break;
       }
     } catch {
-      // Falls back to the straight line below.
+      // Tries the next difficulty, then falls back to the straight line below.
     }
   }
   const failed = followPaths && !line;

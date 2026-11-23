@@ -5,20 +5,61 @@ import ConfirmButton from "../components/ConfirmButton";
 import ElevationProfile from "../components/ElevationProfile";
 import MapView from "../components/MapView";
 import {
+  type PeakCandidate,
   type RouteInfo,
   TYPE_LABEL,
   addPhotos,
   deleteRoute,
+  downloadPeaks,
   duration,
   estimateSeconds,
   km,
+  labelPeak,
   pace,
+  routePeaks,
   updateRoute,
   useLists,
   useRoute,
 } from "../data";
 
 const label = "mb-1 block text-xs font-semibold";
+
+const PEAKS_STATUS = {
+  no_elevation: "This track has no elevation, so reached summits cannot be detected.",
+  no_peaks: "No peaks yet. The app downloads those of Catalonia the first time it starts, which takes about a minute.",
+};
+
+/** The box of a track plus about 1 km around it. */
+function around(line: number[][]) {
+  const lons = line.map((p) => p[0]);
+  const lats = line.map((p) => p[1]);
+  const pad = 0.01;
+  return {
+    south: Math.min(...lats) - pad,
+    west: Math.max(-180, Math.min(...lons) - pad),
+    north: Math.max(...lats) + pad,
+    east: Math.min(180, Math.max(...lons) + pad),
+  };
+}
+
+const peakName = (p: { name: string | null; ele_m: number | null }) =>
+  `${p.name ?? "Unnamed peak"}${p.ele_m == null ? "" : ` (${Math.round(p.ele_m)} m)`}`;
+
+/** Why the detection accepted or rejected a peak, in the order of the three conditions (FR-209). */
+function reasons(p: PeakCandidate) {
+  const gap = p.ele_gap_m;
+  return [
+    `${Math.round(p.min_dist_m)} m from the track`,
+    gap == null
+      ? "peak has no elevation: low confidence"
+      : gap > 0
+        ? `track ${Math.round(gap)} m below the summit`
+        : `track ${Math.round(-gap)} m above the summit`,
+    p.is_local_max == null ? null : p.is_local_max ? "high point of the track" : "not a high point of the track",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
 
 const PHOTO_PLACE = {
   exif: "On the map, from its GPS position",
@@ -35,10 +76,12 @@ export default function RouteDetail() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [peaksProgress, setPeaksProgress] = useState("");
 
   // The track and the photos keep their identity when the category changes, so the map is not redrawn.
   const track = route?.line;
   const photos = route?.photos;
+  const candidates = route?.peaks;
 
   useEffect(() => {
     if (!map || !track || track.length < 2) return;
@@ -103,6 +146,20 @@ export default function RouteDetail() {
       });
     return () => markers.forEach((m) => m.remove());
   }, [map, photos]);
+
+  // One marker per reached peak (FR-206).
+  useEffect(() => {
+    if (!map || !candidates) return;
+    const markers = candidates
+      .filter((p) => p.reached)
+      .map((p) =>
+        new maplibregl.Marker({ color: "#e11d48" })
+          .setLngLat([p.lon, p.lat])
+          .setPopup(new maplibregl.Popup({ offset: 30 }).setText(peakName(p)))
+          .addTo(map),
+      );
+    return () => markers.forEach((m) => m.remove());
+  }, [map, candidates]);
 
   // Marks on the map the point the pointer is over in the profile.
   const showCursor = useCallback(
@@ -318,9 +375,89 @@ export default function RouteDetail() {
             Elevation profile
           </h2>
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-            <ElevationProfile line={route.line} totalM={route.distanceM} onHover={showCursor} />
+            <ElevationProfile
+              line={route.line}
+              totalM={route.distanceM}
+              onHover={showCursor}
+              marks={candidates
+                ?.filter((p) => p.reached && p.dist_m != null)
+                .map((p) => ({ distM: p.dist_m!, label: p.name ?? "Peak" }))}
+            />
           </div>
         </section>
+
+        {route.peaksStatus && route.peaksStatus !== "planned" && candidates && (
+          <section aria-labelledby="peaks-title">
+            <h2 id="peaks-title" className="mb-3 text-lg font-bold">
+              Peaks
+            </h2>
+            {route.peaksStatus === "no_elevation" ? (
+              <p className="text-sm text-slate-400">{PEAKS_STATUS.no_elevation}</p>
+            ) : candidates.length === 0 ? (
+              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
+                <p>{route.peaksStatus === "no_peaks" ? PEAKS_STATUS.no_peaks : "No known peak within 300 m of the track."}</p>
+                {/* Peaks of another region may be downloaded already: this one may still be missing. */}
+                <button
+                  disabled={busy}
+                  className="btn text-sm"
+                  onClick={() =>
+                    attempt(async () => {
+                      setPeaksProgress("Downloading peaks from OpenStreetMap…");
+                      try {
+                        await downloadPeaks(around(route.line), (p) =>
+                          setPeaksProgress(p.stage === "analyse" ? `Analysing activities: ${p.done} of ${p.total}` : "Downloading peaks from OpenStreetMap…"),
+                        );
+                      } finally {
+                        setPeaksProgress("");
+                      }
+                      setRoute({ ...route, ...(await routePeaks(route.id)) });
+                    })
+                  }
+                >
+                  Download peaks around this route
+                </button>
+                {peaksProgress && <p role="status">{peaksProgress}</p>}
+              </div>
+            ) : (
+              <ul className="divide-y divide-slate-800 rounded-2xl border border-slate-800 bg-slate-900 text-sm">
+                {[...candidates]
+                  .sort((a, b) => Number(b.reached) - Number(a.reached))
+                  .map((p) => (
+                    <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium">
+                          {peakName(p)}{" "}
+                          <span
+                            className={`ml-1 rounded-full px-2 py-0.5 text-xs ${
+                              p.reached ? "bg-emerald-400/15 text-emerald-300" : "bg-slate-800 text-slate-400"
+                            }`}
+                          >
+                            {p.reached ? "Reached" : "Not reached"}
+                            {p.manual_label != null && " · set by you"}
+                          </span>
+                        </p>
+                        <p className="mt-0.5 text-xs text-slate-400">Detection: {reasons(p)}</p>
+                      </div>
+                      {/* A correction is kept when the activities are analysed again (FR-208). */}
+                      <button
+                        disabled={busy}
+                        className="btn text-xs"
+                        onClick={() =>
+                          attempt(async () => {
+                            const next = p.manual_label != null ? null : !p.reached;
+                            const saved = await labelPeak(route.id, p.id, next);
+                            setRoute({ ...route, peaks: candidates.map((c) => (c.id === p.id ? saved : c)) });
+                          })
+                        }
+                      >
+                        {p.manual_label != null ? "Undo correction" : p.reached ? "I did not reach it" : "I reached it"}
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </section>
+        )}
 
         {photos && (
           <section aria-labelledby="photos-title">

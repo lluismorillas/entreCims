@@ -82,6 +82,18 @@ cd frontend && npm run dev                                     # open http://loc
 >
 > The same goes for the install commands (`cd backend; uv sync`). With `;` the second command runs even if the first one fails, so check that the `cd` worked. [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows) accepts `&&`, and so do Git Bash and WSL: there the commands work as written.
 
+**API documentation.** The interface talks to the server through a JSON API under `/api`, built with [FastAPI](https://fastapi.tiangolo.com/). FastAPI documents it by itself, from the code, so these pages are always up to date:
+
+| Address | What it is |
+|---|---|
+| <http://localhost:8000/docs> | Interactive documentation (Swagger UI): every endpoint with its parameters and answers, and a **Try it out** button to call it from the browser. |
+| <http://localhost:8000/redoc> | The same documentation in a format for reading (ReDoc). |
+| <http://localhost:8000/openapi.json> | The machine-readable description (OpenAPI 3.1), to generate clients or import into tools such as Postman or Bruno. |
+
+- **Try it out** works on your real data: a `DELETE` really deletes.
+- The two documentation pages load their scripts from a CDN, so they need internet, even though the API itself does not.
+- They are on the backend's port (8000), not on the Vite port (5173). The same addresses work with the Docker install.
+
 - The development backend and the Docker container both use port 8000: stop the container first with `docker compose stop`.
 - In development, the data goes to `backend/data/`, not to the Docker volume: they are two separate databases.
 

@@ -181,9 +181,9 @@ export default function Peaks() {
 
         <h2 className="mt-5 font-semibold">Reached peaks</h2>
         {peaks?.length === 0 && <p className="mt-1 text-slate-400">No reached peaks yet.</p>}
-        <ul className="mt-2 space-y-3">
+        <ul className="mt-2 space-y-2">
           {peaks?.map((p) => (
-            <li key={p.id}>
+            <li key={p.id} className="rounded-xl border border-slate-800 bg-slate-950 p-3 hover:border-slate-700">
               <button
                 className="flex w-full justify-between gap-2 text-left font-medium hover:text-sky-300"
                 onClick={() => map?.flyTo({ center: [p.lon, p.lat], zoom: 14 })}
@@ -194,7 +194,7 @@ export default function Peaks() {
                 </span>
                 <span className="shrink-0 text-slate-400">{p.visits.length}×</span>
               </button>
-              <ul className="mt-0.5 text-xs text-slate-400">
+              <ul className="mt-2 space-y-0.5 border-t border-slate-800 pt-2 text-xs text-slate-400">
                 {p.visits.map((v) => (
                   <li key={v.activity_id}>
                     {date(v.first_passed_at)} ·{" "}

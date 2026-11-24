@@ -76,7 +76,7 @@ export default function TimeModel() {
           <>
             <section aria-labelledby="trend-title">
               <h2 id="trend-title" className="text-lg font-bold">
-                How your pace has changed
+                Your pace evolution
               </h2>
               <p className="mb-3 text-sm text-slate-400">The model rebuilt after each outing, with only that outing and the earlier ones.</p>
               <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
@@ -121,9 +121,10 @@ export default function TimeModel() {
               </div>
               <details className="mt-2 text-sm text-slate-400">
                 <summary className="cursor-pointer hover:text-slate-100">Show the outings as a table</summary>
-                <table className="mt-2 w-full text-left">
+                <div className="mt-2 overflow-x-auto rounded-xl border border-slate-800">
+                <table className="data-table">
                   <thead>
-                    <tr className="text-xs">
+                    <tr>
                       <th className="font-semibold">Date</th>
                       <th className="font-semibold">Outing</th>
                       <th className="text-right font-semibold">Moving time</th>
@@ -147,6 +148,7 @@ export default function TimeModel() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </details>
             </section>
           </>
@@ -158,9 +160,10 @@ export default function TimeModel() {
         {history && history.versions.length > 0 && (
           <details className="text-sm text-slate-400">
             <summary className="cursor-pointer hover:text-slate-100">Saved versions of the model ({history.versions.length})</summary>
-            <table className="mt-2 w-full max-w-lg text-left">
+            <div className="mt-2 max-w-lg overflow-x-auto rounded-xl border border-slate-800">
+            <table className="data-table">
               <thead>
-                <tr className="text-xs">
+                <tr>
                   <th className="font-semibold">Version</th>
                   <th className="font-semibold">Saved</th>
                   <th className="text-right font-semibold">Outings</th>
@@ -178,6 +181,7 @@ export default function TimeModel() {
                 ))}
               </tbody>
             </table>
+            </div>
           </details>
         )}
       </div>

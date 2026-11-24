@@ -19,7 +19,6 @@ First release.
 - Time model page: speed by slope, how the pace changed outing by outing, and each outing against its prediction.
 - Each recorded track can be coloured by where it was faster or slower than predicted.
 - Route planner following paths (Valhalla), with draggable points and line, and a warning when Valhalla or Overpass do not answer.
-- Reproducible evaluation of peak detection and time prediction (`eval/`), with the results in `docs/evaluation.md`.
 - Docker image and Compose file, published on `127.0.0.1` only; continuous integration with lint, tests and the Docker build.
 
 [Unreleased]: https://github.com/lluismorillas/entreCims/compare/v0.1.0...HEAD

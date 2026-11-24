@@ -5,6 +5,7 @@ import json
 import os
 import re
 import statistics
+import urllib.error
 import urllib.parse
 import urllib.request
 from math import cos, hypot, radians
@@ -453,6 +454,19 @@ def _download(fetch) -> StreamingResponse:
         yield json.dumps({"stage": "done"}) + "\n"
 
     return StreamingResponse(progress(), media_type="application/x-ndjson")
+
+
+@router.get("/status/overpass")
+def overpass_status() -> dict[str, bool]:
+    """Si Overpass respon. Hi parla el servidor i no el navegador, i per això ho comprova ell."""
+    request = urllib.request.Request(OVERPASS_URL, headers={"User-Agent": "entreCims"})
+    try:
+        urllib.request.urlopen(request, timeout=5).close()
+    except urllib.error.HTTPError:
+        pass  # respon, encara que sigui amb un error perquè no porta cap consulta: és viu
+    except OSError:
+        return {"up": False}
+    return {"up": True}
 
 
 @router.post("/analysis/rerun")

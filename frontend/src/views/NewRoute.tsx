@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import * as maplibregl from "maplibre-gl";
 import MapView from "../components/MapView";
+import ServiceStatus from "../components/ServiceStatus";
 import { fitTo } from "../components/useRouteMarkers";
 import {
   type ImportResult,
@@ -123,6 +124,73 @@ export default function NewRoute() {
     return () => void map.off("click", click);
   }, [map]);
 
+  // Dragging the line pulls a new point out of it. While dragging, a dashed guide shows the
+  // detour; the path is only asked for on release, so Valhalla is not called on every move.
+  const anchorsRef = useRef(anchors);
+  useEffect(() => {
+    anchorsRef.current = anchors;
+  }, [anchors]);
+  useEffect(() => {
+    if (!map) return;
+    const empty = { type: "FeatureCollection" as const, features: [] };
+    map.addSource("draft-ghost", { type: "geojson", data: empty });
+    map.addLayer({
+      id: "draft-ghost",
+      type: "line",
+      source: "draft-ghost",
+      paint: { "line-color": "#1d4ed8", "line-width": 3, "line-dasharray": [2, 2] },
+    });
+    const ghost = map.getSource("draft-ghost") as maplibregl.GeoJSONSource;
+    let drag: { at: number; start: maplibregl.Point } | null = null;
+
+    const down = (e: maplibregl.MapLayerMouseEvent | maplibregl.MapLayerTouchEvent) => {
+      const at = e.features?.[0]?.properties.leg;
+      if (at == null) return;
+      e.preventDefault(); // the map must not pan while the line is pulled
+      drag = { at, start: e.point };
+    };
+    const move = (e: maplibregl.MapMouseEvent | maplibregl.MapTouchEvent) => {
+      if (!drag) return;
+      const a = anchorsRef.current;
+      ghost.setData({
+        type: "Feature",
+        properties: {},
+        geometry: { type: "LineString", coordinates: [a[drag.at], [e.lngLat.lng, e.lngLat.lat], a[drag.at + 1]] },
+      });
+    };
+    const up = (e: maplibregl.MapMouseEvent | maplibregl.MapTouchEvent) => {
+      if (!drag) return;
+      const { at, start } = drag;
+      drag = null;
+      ghost.setData(empty);
+      // A press without moving is a click, which already adds the point.
+      if (e.point.dist(start) <= 3) return;
+      const position = [e.lngLat.lng, e.lngLat.lat];
+      setAnchors((a) => [...a.slice(0, at + 1), position, ...a.slice(at + 1)]);
+    };
+    const grab = () => void (map.getCanvas().style.cursor = "grab");
+    const release = () => void (map.getCanvas().style.cursor = "crosshair");
+
+    map.on("mousedown", "draft-line", down);
+    map.on("touchstart", "draft-line", down);
+    map.on("mousemove", move);
+    map.on("touchmove", move);
+    map.on("mouseup", up);
+    map.on("touchend", up);
+    map.on("mouseenter", "draft-line", grab);
+    map.on("mouseleave", "draft-line", release);
+    return () => {
+      map.off("mousedown", "draft-line", down);
+      map.off("touchstart", "draft-line", down);
+      map.off("mousemove", move);
+      map.off("touchmove", move);
+      map.off("mouseup", up);
+      map.off("touchend", up);
+      map.off("mouseenter", "draft-line", grab);
+      map.off("mouseleave", "draft-line", release);
+    };
+  }, [map]);
+
   // Start where the user's other routes are rather than on a world map.
   useEffect(() => {
     if (map && routes?.length) fitTo(map, routes);
@@ -169,6 +237,7 @@ export default function NewRoute() {
   const track = legs.flatMap((l) => l.coords);
   const stats = track.length > 1 ? trackStats(track) : null;
   const straight = legs.filter((l) => l.failed).length;
+  const offline = legs.some((l) => l.offline);
   // A drawn route marked as done has no recorded time, and an estimate would not be honest.
   const totalS = form.completed ? null : (stats?.totalS ?? null);
 
@@ -261,8 +330,8 @@ export default function NewRoute() {
         </section>
 
         <section aria-labelledby="choose" className="space-y-2 border-t border-slate-800 pt-4">
-          <h2 id="choose" className="font-bold">
-            Or draw a route
+          <h2 id="choose" className="flex items-center gap-2 font-bold">
+            Or draw a route <ServiceStatus />
           </h2>
           <p className="text-slate-400">
             Click the map to add points. Drag a point to move it, click the line to add one in between, double-click a point to remove
@@ -282,14 +351,16 @@ export default function NewRoute() {
           </div>
           {straight > 0 && !busy && (
             <p role="alert" className="text-amber-300">
-              No path found for {straight} segment{straight > 1 ? "s" : ""}: drawn as {straight > 1 ? "straight lines" : "a straight line"}.
+              {offline
+                ? "The path server (Valhalla) is not answering: segments are drawn as straight lines, without elevation. Try again later."
+                : `No path found for ${straight} segment${straight > 1 ? "s" : ""}: drawn as ${straight > 1 ? "straight lines" : "a straight line"}.`}
             </p>
           )}
         </section>
 
         <section aria-labelledby="basic" className="border-t border-slate-800 pt-4">
           <h2 id="basic" className="font-bold">
-            Basic information
+            Route information
           </h2>
           <dl role="status" className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 [&_dt]:text-xs [&_dt]:font-semibold">
             <div>

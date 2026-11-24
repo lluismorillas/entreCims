@@ -351,3 +351,18 @@ def test_areas_index_and_download_by_name(client, monkeypatch):
     assert '["name"="Nowhere"]' in queries[-1]
     assert "No peaks found" in progress[-1]["error"]
     assert client.post("/api/peaks/download-area", json={"name": ""}).status_code == 422
+
+
+def test_overpass_status(client, monkeypatch):
+    import urllib.error
+
+    def answers(request, timeout):
+        raise urllib.error.HTTPError(request.full_url, 400, "no query", {}, None)
+
+    def silent(request, timeout):
+        raise TimeoutError("timed out")
+
+    monkeypatch.setattr(peaks.urllib.request, "urlopen", answers)
+    assert client.get("/api/status/overpass").json() == {"up": True}
+    monkeypatch.setattr(peaks.urllib.request, "urlopen", silent)
+    assert client.get("/api/status/overpass").json() == {"up": False}

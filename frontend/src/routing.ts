@@ -45,16 +45,39 @@ export function reaches(line: number[][], from: number[], to: number[]) {
   return metres(line[0], from) <= 50 && metres(line.at(-1)!, to) <= 50;
 }
 
+/**
+ * Whether Valhalla answers at all. `no-cors` gives an opaque answer, which is enough: only a
+ * network failure or the 5 s limit counts as down. Disabled (empty URL) is not a failure.
+ */
+export async function valhallaUp() {
+  if (!VALHALLA_URL) return true;
+  try {
+    await fetch(`${VALHALLA_URL}/status`, { mode: "no-cors", signal: AbortSignal.timeout(5000) });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Valhalla answered, but with an error (e.g. no path within the allowed difficulty). */
+class Refused extends Error {}
+
 async function valhalla(path: string, body: unknown) {
-  // No Content-Type header: a plain-text POST needs no CORS preflight.
-  const res = await fetch(VALHALLA_URL + path, { method: "POST", body: JSON.stringify(body) });
-  if (!res.ok) throw new Error(`Valhalla ${path}: ${res.status}`);
+  // No Content-Type header: a plain-text POST needs no CORS preflight. 10 s: a server that does
+  // not answer must not leave the planner waiting, since every leg asks it up to three times.
+  const res = await fetch(VALHALLA_URL + path, {
+    method: "POST",
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!res.ok) throw new Refused(`Valhalla ${path}: ${res.status}`);
   return res.json();
 }
 
 /**
  * One leg of a planned route as [lon, lat, ele?] positions.
  * `failed` means a path was wanted but could not be found, so the leg is a straight line.
+ * `offline` means Valhalla did not answer at all: no path and no elevation.
  */
 export async function routeLeg(
   from: number[],
@@ -65,6 +88,7 @@ export async function routeLeg(
 ) {
   let line: number[][] | null = null;
   let shape: object = {};
+  let offline = false;
   // Valhalla's default (1) refuses anything harder than a marked hiking path. T4 (alpine hiking)
   // comes first so an easy path wins; if it cannot reach the clicked points, as on Pica d'Estats,
   // whose last stretch is T5, T6 is tried.
@@ -83,8 +107,12 @@ export async function routeLeg(
         shape = { encoded_polyline: encoded, shape_format: "polyline6" };
         if (reaches(decoded, from, to)) break;
       }
-    } catch {
-      // Tries the next difficulty, then falls back to the straight line below.
+    } catch (e) {
+      // Refused: the next difficulty may still find a path. No answer: asking again only waits.
+      if (!(e instanceof Refused)) {
+        offline = true;
+        break;
+      }
     }
   }
   const failed = followPaths && !line;
@@ -92,7 +120,7 @@ export async function routeLeg(
     line = straightLine(from, to, metres);
     shape = { shape: line.map(([lon, lat]) => ({ lon, lat })) };
   }
-  if (VALHALLA_URL) {
+  if (VALHALLA_URL && !offline) {
     try {
       const heights = (await valhalla("/height", { ...shape, range: false }))?.height;
       if (Array.isArray(heights) && heights.length === line.length && heights.every(Number.isFinite))
@@ -101,5 +129,5 @@ export async function routeLeg(
       // No elevation: the route keeps its distance but loses climb and time.
     }
   }
-  return { coords: line, failed };
+  return { coords: line, failed, offline };
 }

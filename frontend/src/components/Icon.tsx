@@ -1,4 +1,3 @@
-// Stroke icons on a 24 px grid.
 const ICONS = {
   type: "m8 3 4 8 5-5 5 15H2L8 3z",
   difficulty: "m12 14 4-4M3.34 19a10 10 0 1 1 17.32 0",
@@ -12,6 +11,7 @@ const ICONS = {
   map: "m9 18-6 3V6l6-3 6 3 6-3v15l-6 3-6-3zM9 3v15M15 6v15",
   list: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
   flag: "M4 22V4h13l-2 4 2 4H4",
+  warning: "M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01",
   pin: "M20 10c0 5-8 12-8 12s-8-7-8-12a8 8 0 0 1 16 0zM12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
 };
 export type IconName = keyof typeof ICONS;

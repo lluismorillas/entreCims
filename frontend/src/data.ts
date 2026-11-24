@@ -351,13 +351,115 @@ export function useLists() {
 }
 
 /**
- * Personalised time for a planned route (task 3.3).
- * shortcut: returns the generic Tobler estimate computed at import, because the
- * user's performance model (spec F3) does not exist yet. Replace the body with
- * POST /api/predictions; `personalised` then becomes true.
+ * Quick time for a planned route, for cards and the planner.
+ * shortcut: the generic Tobler estimate computed in the browser; only the route page asks the
+ * server for the personalised one (usePrediction). Use it here too if cards should show it.
  */
 export function estimateSeconds(route: RouteInfo) {
   return { seconds: route.totalS, personalised: false };
+}
+
+/** Activity types with a time model of their own; bikes have none (the Tobler shape does not fit). */
+export const MODEL_KIND = { hike: "hike", trail: "trail_run", run: "run", bike: null } as const;
+
+/** The user's speed model (backend/src/timing.py): curve rows are [slope %, km/h, Tobler km/h]. */
+export type TimeModel = {
+  version: number | null;
+  /** "model": the slope curve predicts. "naismith": a·distance + b·climb, calibrated (runs). */
+  method: "model" | "naismith";
+  /** Seconds per metre walked and per metre climbed, for "naismith". */
+  a: number;
+  b: number;
+  n_activities: number;
+  stop_rate: number | null;
+  curve: [number, number, number][];
+};
+
+/** The model rebuilt outing by outing (GET /api/model/history). */
+export type ModelHistory = {
+  type: string;
+  method: TimeModel["method"];
+  outings: {
+    activity_id: string;
+    name: string;
+    date: string;
+    moving_s: number;
+    /** What the model trained on the earlier outings predicted; null for the first. */
+    predicted_s: number | null;
+    flat_kmh: number;
+    up_kmh: number;
+    down_kmh: number;
+  }[];
+  versions: { version: number; created_at: string; n_activities: number; flat_kmh: number }[];
+};
+
+/** Each 100 m of a recorded outing against the current model: real / predicted − 1 (FR-403). */
+export type Deviations = {
+  method: TimeModel["method"];
+  segments: { coordinates: number[][]; deviation: number | null }[];
+};
+
+/** Asked for only once the user turns the colouring on. */
+export function useDeviations(id: string, on: boolean) {
+  const [result, setResult] = useState<{ id: string; deviations?: Deviations; error?: string } | null>(null);
+  useEffect(() => {
+    if (!on) return;
+    api(`activities/${encodeURIComponent(id)}/deviations`).then(
+      (deviations: Deviations) => setResult({ id, deviations }),
+      (e: Error) => setResult({ id, error: e.message }),
+    );
+  }, [id, on]);
+  return on && result?.id === id ? result : null;
+}
+
+export function useModelHistory(type: RouteInfo["type"]) {
+  const [history, setHistory] = useState<ModelHistory | null>(null);
+  const kind = MODEL_KIND[type];
+  useEffect(() => {
+    if (kind) api(`model/history?type=${kind}`).then(setHistory, () => setHistory(null));
+  }, [kind]);
+  // Until the new type arrives, the previous one's history is not shown under the wrong name.
+  return history?.type === kind ? history : null;
+}
+
+export function useTimeModel(type: RouteInfo["type"] | undefined) {
+  const [model, setModel] = useState<TimeModel | null>(null);
+  const kind = type && MODEL_KIND[type];
+  useEffect(() => {
+    if (kind) api(`model?type=${kind}`).then(setModel, () => setModel(null));
+  }, [kind]);
+  return kind ? model : null;
+}
+
+/** Predicted moving time with a 90 % interval, and total time with stops when they are known. */
+export type Prediction = {
+  moving_s: number;
+  moving_low_s: number;
+  moving_high_s: number;
+  total_s: number | null;
+  method: TimeModel["method"];
+  n_activities: number;
+  version: number | null;
+};
+
+/** Asks the server for the time of a planned route (FR-305). `error` explains a refusal (FR-307). */
+export function usePrediction(route: RouteInfo | null | undefined) {
+  const [result, setResult] = useState<{ prediction?: Prediction; error?: string }>({});
+  const line = route?.kind === "planned" ? route.line : null;
+  const kind = route && MODEL_KIND[route.type];
+  useEffect(() => {
+    if (!line || !kind) return;
+    let stale = false;
+    api("predictions", json("POST", { points: line, type: kind })).then(
+      (prediction: Prediction) => !stale && setResult({ prediction }),
+      (e: Error) => !stale && setResult({ error: e.message }),
+    );
+    return () => {
+      stale = true;
+    };
+  }, [line, kind]);
+  if (line && !kind) return { error: "Time prediction is only available for hiking, trail running and running." };
+  return result;
 }
 
 export const km = (m: number) => `${(m / 1000).toFixed(1)} km`;

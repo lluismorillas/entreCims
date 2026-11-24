@@ -4,6 +4,7 @@ import * as maplibregl from "maplibre-gl";
 import ConfirmButton from "../components/ConfirmButton";
 import ElevationProfile from "../components/ElevationProfile";
 import MapView from "../components/MapView";
+import SpeedCurve from "../components/SpeedCurve";
 import {
   type PeakCandidate,
   type RouteInfo,
@@ -18,8 +19,11 @@ import {
   pace,
   routePeaks,
   updateRoute,
+  useDeviations,
   useLists,
+  usePrediction,
   useRoute,
+  useTimeModel,
 } from "../data";
 
 const label = "mb-1 block text-xs font-semibold";
@@ -61,6 +65,12 @@ function reasons(p: PeakCandidate) {
     .join(" · ");
 }
 
+// Faster than predicted, as predicted, slower: two hues around a neutral grey.
+const PACE = { faster: "#2563eb", even: "#94a3b8", slower: "#dc2626" };
+
+// Each type has its own time model, trained only on outings of that type.
+const OUTINGS = { hike: "hikes", trail: "trail runs", run: "runs", bike: "rides" };
+
 const PHOTO_PLACE = {
   exif: "On the map, from its GPS position",
   interpolated: "On the map, from the time it was taken",
@@ -70,6 +80,10 @@ const PHOTO_PLACE = {
 export default function RouteDetail() {
   const { id } = useParams();
   const [route, setRoute] = useRoute(id!);
+  const { prediction, error: predictionError } = usePrediction(route);
+  const timeModel = useTimeModel(route?.type);
+  const [paceColours, setPaceColours] = useState(false);
+  const deviations = useDeviations(id!, paceColours);
   const [lists, setLists] = useLists();
   const navigate = useNavigate();
   const [map, setMap] = useState<maplibregl.Map | null>(null);
@@ -161,6 +175,55 @@ export default function RouteDetail() {
     return () => markers.forEach((m) => m.remove());
   }, [map, candidates]);
 
+  // Each segment coloured by real against predicted time (FR-403), over the track and the relief.
+  const segments = deviations?.deviations?.segments;
+  useEffect(() => {
+    if (!map || !segments) return;
+    map.addSource("deviation", {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: segments
+          .filter((s) => s.deviation != null)
+          .map((s) => ({
+            type: "Feature",
+            properties: { deviation: s.deviation },
+            geometry: { type: "LineString", coordinates: s.coordinates },
+          })),
+      },
+    });
+    map.addLayer(
+      {
+        id: "deviation",
+        type: "line",
+        source: "deviation",
+        layout: { "line-cap": "round", "line-join": "round" },
+        // Diverging: two hues and a neutral grey at "as predicted"; beyond ±30 % it saturates.
+        paint: {
+          "line-width": 5,
+          "line-color": ["interpolate", ["linear"], ["get", "deviation"], -0.3, PACE.faster, 0, PACE.even, 0.3, PACE.slower],
+        },
+      },
+      map.getLayer("ends") ? "ends" : undefined,
+    );
+    const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
+    const show = (e: maplibregl.MapLayerMouseEvent) => {
+      const d = e.features?.[0]?.properties.deviation as number;
+      const pct = Math.round(Math.abs(d) * 100);
+      popup.setLngLat(e.lngLat).setText(pct === 0 ? "As predicted" : `${pct} % ${d < 0 ? "faster" : "slower"} than predicted`).addTo(map);
+    };
+    const hide = () => popup.remove();
+    map.on("mousemove", "deviation", show);
+    map.on("mouseleave", "deviation", hide);
+    return () => {
+      map.off("mousemove", "deviation", show);
+      map.off("mouseleave", "deviation", hide);
+      popup.remove();
+      map.removeLayer("deviation");
+      map.removeSource("deviation");
+    };
+  }, [map, segments]);
+
   // Marks on the map the point the pointer is over in the profile.
   const showCursor = useCallback(
     (p: number[] | null) =>
@@ -183,7 +246,11 @@ export default function RouteDetail() {
     );
 
   const planned = route.kind === "planned";
-  const time = planned ? estimateSeconds(route) : { seconds: route.totalS, personalised: false };
+  const time = !planned
+    ? { seconds: route.totalS, personalised: false }
+    : prediction
+      ? { seconds: prediction.total_s ?? prediction.moving_s, personalised: prediction.n_activities > 0 }
+      : estimateSeconds(route);
   // Runs `action` and shows its failure instead of leaving the click without an answer.
   const attempt = async (action: () => Promise<void>) => {
     setBusy(true);
@@ -351,6 +418,25 @@ export default function RouteDetail() {
         <div className="h-[26rem] overflow-hidden rounded-2xl border border-slate-800">
           <MapView onMap={setMap} />
         </div>
+        {!planned && route.fromApi && route.type !== "bike" && (
+          <div className="-mt-3 flex flex-wrap items-center gap-3 text-sm">
+            <button aria-pressed={paceColours} onClick={() => setPaceColours(!paceColours)} className="btn text-sm">
+              {paceColours ? "Hide pace colours" : "Colour by pace"}
+            </button>
+            {paceColours && deviations?.deviations && (
+              <span className="flex items-center gap-2 text-xs text-slate-300">
+                Faster
+                <span
+                  aria-hidden="true"
+                  className="h-2 w-32 rounded-full"
+                  style={{ background: `linear-gradient(to right, ${PACE.faster}, ${PACE.even}, ${PACE.slower})` }}
+                />
+                Slower than your {deviations.deviations.method === "naismith" ? "calibrated Naismith" : "model"} predicts (±30 %)
+              </span>
+            )}
+            {paceColours && deviations?.error && <span className="text-xs text-slate-400">{deviations.error}</span>}
+          </div>
+        )}
 
         {(route.description || route.tags?.length) && (
           <section aria-labelledby="description-title">
@@ -385,6 +471,54 @@ export default function RouteDetail() {
             />
           </div>
         </section>
+
+        {planned && (
+          <section aria-labelledby="prediction-title">
+            <h2 id="prediction-title" className="mb-3 text-lg font-bold">
+              Time prediction
+            </h2>
+            {predictionError ? (
+              <p className="text-sm text-slate-400">{predictionError}</p>
+            ) : (
+              prediction && (
+                <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-4 text-sm">
+                  <dl className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <dt className="font-semibold">Moving time</dt>
+                      <dd className="text-2xl font-bold">{duration(prediction.moving_s)}</dd>
+                      <dd className="text-xs text-slate-400">
+                        Likely between {duration(prediction.moving_low_s)} and {duration(prediction.moving_high_s)} (90 %)
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold">Total time, with stops</dt>
+                      <dd className="text-2xl font-bold">{prediction.total_s ? duration(prediction.total_s) : "–"}</dd>
+                      <dd className="text-xs text-slate-400">
+                        {prediction.total_s
+                          ? "Stops as long, in proportion, as in your hikes."
+                          : `Stops are estimated once you have recorded ${OUTINGS[route.type]}.`}
+                      </dd>
+                    </div>
+                  </dl>
+                  <p className="text-xs text-slate-400">
+                    {prediction.n_activities
+                      ? `${prediction.method === "naismith" ? "Naismith's rule calibrated on" : "Based on your pace in"} ${prediction.n_activities} ${OUTINGS[route.type]} (model version ${prediction.version}).`
+                      : `No ${OUTINGS[route.type]} recorded yet: ${prediction.method === "naismith" ? "this is Naismith's rule" : "this is Tobler's generic walking pace"}.`}{" "}
+                    <Link to="/model" className="text-sky-300 underline">
+                      See the time model
+                    </Link>
+                  </p>
+                  {timeModel && (
+                    <div>
+                      <h3 className="mb-2 font-semibold">Your speed by slope ({TYPE_LABEL[route.type].toLowerCase()})</h3>
+                      <SpeedCurve curve={timeModel.curve} />
+                    </div>
+                  )}
+                </div>
+              )
+            )}
+          </section>
+        )}
 
         {route.peaksStatus && route.peaksStatus !== "planned" && candidates && (
           <section aria-labelledby="peaks-title">

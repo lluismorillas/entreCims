@@ -5,12 +5,14 @@ import Lists from "./views/Lists";
 import NewRoute from "./views/NewRoute";
 import Peaks from "./views/Peaks";
 import RouteDetail from "./views/RouteDetail";
+import TimeModel from "./views/TimeModel";
 import RoutesView from "./views/Routes";
 
 const LINKS = [
   ["/", "Home", "home"],
   ["/routes", "Routes", "map"],
   ["/peaks", "Peaks", "flag"],
+  ["/model", "Time model", "time"],
   ["/lists", "Lists", "list"],
 ] as const;
 
@@ -21,9 +23,8 @@ function App() {
         aria-label="Main"
         className="flex shrink-0 flex-wrap items-center gap-1 border-slate-800 bg-slate-900 p-2 text-sm max-md:border-b md:w-56 md:flex-col md:items-stretch md:border-r md:p-3">
         <span className="flex items-center gap-2 px-2 text-lg font-bold tracking-tight md:pt-1 md:pb-4">
-          <span className="grid size-8 place-items-center rounded-lg bg-sky-400 text-slate-950">
-            <Icon name="type" className="size-5" />
-          </span>
+          {/* Decorative: the name next to it already says what it is. */}
+          <img src="/logo.jpg" alt="" className="size-8 rounded-lg" />
           <span>
             entre<span className="text-sky-400">Cims</span>
           </span>
@@ -55,6 +56,7 @@ function App() {
           <Route path="/routes" element={<RoutesView />} />
           <Route path="/routes/:id" element={<RouteDetail />} />
           <Route path="/peaks" element={<Peaks />} />
+          <Route path="/model" element={<TimeModel />} />
           <Route path="/lists" element={<Lists />} />
         </Routes>
       </main>

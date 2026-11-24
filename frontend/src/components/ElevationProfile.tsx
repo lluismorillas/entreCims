@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import { distance } from "../data";
+import AxisTitles from "./AxisTitles";
 
 const W = 800;
-const H = 200;
-const PAD = { left: 48, right: 10, top: 14, bottom: 24 };
+const H = 216;
+// Room on the left and below for the axis titles.
+const PAD = { left: 64, right: 10, top: 14, bottom: 40 };
 
 /** Elevation against distance. Hovering reports the track position so the map can mark it (FR-109). */
 type Props = {
@@ -70,7 +72,7 @@ export default function ElevationProfile({ line, totalM, onHover, marks = [] }: 
         </g>
       ))}
       {Array.from({ length: Math.floor(total / 1000 / kmStep) + 1 }, (_, i) => i * kmStep).map((k) => (
-        <text key={k} x={x(k * 1000)} y={H - 6} textAnchor="middle" className="fill-slate-400">
+        <text key={k} x={x(k * 1000)} y={H - 22} textAnchor="middle" className="fill-slate-400">
           {k} km
         </text>
       ))}
@@ -102,6 +104,7 @@ export default function ElevationProfile({ line, totalM, onHover, marks = [] }: 
           </text>
         </g>
       )}
+      <AxisTitles x="Distance along the route" y="Elevation" width={W} height={H} pad={PAD} />
     </svg>
   );
 }

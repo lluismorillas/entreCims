@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import * as maplibregl from "maplibre-gl";
+import Icon from "../components/Icon";
 import MapView from "../components/MapView";
 import {
   type DownloadProgress,
@@ -36,8 +37,12 @@ export default function Peaks() {
   const [busy, setBusy] = useState(false);
   const [area, setArea] = useState("");
   const areas = usePeakAreas();
-  // Index of areas by kind, each sorted as a Catalan reader expects (accents included).
-  const kinds = [...new Set(areas.map((a) => a.kind))].map(
+  // Index of areas by kind, smallest kind first, each sorted as a Catalan reader expects (accents included).
+  const order = (kind: string) => {
+    const i = ["Departament", "Comunitat", "País"].findIndex((k) => kind.startsWith(k));
+    return i < 0 ? 99 : i; // a kind added later goes last
+  };
+  const kinds = [...new Set(areas.map((a) => a.kind))].sort((x, y) => order(x) - order(y)).map(
     (kind) =>
       [
         kind,
@@ -147,24 +152,30 @@ export default function Peaks() {
         </form>
         <details className="mt-2">
           <summary className="cursor-pointer text-xs text-slate-400 hover:text-slate-100">Index of areas</summary>
-          {kinds.map(([kind, names]) => (
-            <div key={kind} className="mt-2">
-              <h3 className="text-xs font-semibold text-slate-300">{kind}</h3>
-              <ul className="mt-1 flex flex-wrap gap-1 text-xs">
-                {names.map((name) => (
-                  <li key={name}>
-                    <button
-                      type="button"
-                      onClick={() => setArea(name)}
-                      className="rounded-full bg-slate-800 px-2 py-0.5 hover:bg-slate-700"
-                    >
-                      {name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div className="mt-2 space-y-2">
+            {kinds.map(([kind, names]) => (
+              <details key={kind} className="group rounded-xl border border-slate-800 bg-slate-950 open:border-slate-700">
+                <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-200 [&::-webkit-details-marker]:hidden">
+                  <Icon name="chevron" className="size-3.5 transition-transform group-open:rotate-90" />
+                  <span className="flex-1">{kind}</span>
+                  <span className="font-normal text-slate-400">{names.length}</span>
+                </summary>
+                <ul className="flex max-h-48 flex-wrap gap-1 overflow-y-auto border-t border-slate-800 p-2 text-xs">
+                  {names.map((name) => (
+                    <li key={name}>
+                      <button
+                        type="button"
+                        onClick={() => setArea(name)}
+                        className={`rounded-full px-2 py-0.5 ${name === area ? "bg-sky-400/15 text-sky-300" : "bg-slate-800 hover:bg-slate-700"}`}
+                      >
+                        {name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
+          </div>
           <p className="mt-2 text-xs text-slate-500">
             Other names also work if they match an administrative area of OpenStreetMap exactly.
           </p>

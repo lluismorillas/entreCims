@@ -47,7 +47,7 @@ function App() {
           <Icon name="plus" />
           Import or draw a route
         </NavLink>
-        <p className="mt-auto px-2 pt-4 text-xs text-slate-500 max-md:hidden">Local app. Local host.</p>
+        <p className="mt-auto px-2 pt-4 text-xs text-slate-500 max-md:hidden">wabisabi</p>
       </nav>
       <main className="min-h-0 min-w-0 flex-1">
         <Routes>

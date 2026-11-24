@@ -89,6 +89,7 @@ export default function RouteDetail() {
   const [map, setMap] = useState<maplibregl.Map | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [peaksProgress, setPeaksProgress] = useState("");
 
@@ -224,13 +225,17 @@ export default function RouteDetail() {
     };
   }, [map, segments]);
 
-  // Marks on the map the point the pointer is over in the profile.
+  // Marks on the map the point the pointer is over in the profile, and keeps the map centred on it.
+  // jumpTo, not easeTo: pointer moves come many times a second, and animations would pile up.
   const showCursor = useCallback(
-    (p: number[] | null) =>
-      (map?.getSource("cursor") as maplibregl.GeoJSONSource | undefined)?.setData({
+    (p: number[] | null) => {
+      if (!map) return;
+      (map.getSource("cursor") as maplibregl.GeoJSONSource | undefined)?.setData({
         type: "FeatureCollection",
         features: p ? [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [p[0], p[1]] } }] : [],
-      }),
+      });
+      if (p) map.jumpTo({ center: [p[0], p[1]] });
+    },
     [map],
   );
 
@@ -296,7 +301,8 @@ export default function RouteDetail() {
   ];
 
   return (
-    <div className="h-full overflow-y-auto">
+    // relative: the sr-only photo input is absolutely positioned; without it, it stretches the window and adds a second scrollbar.
+    <div className="relative h-full overflow-y-auto">
       <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6">
         <header>
           <Link to="/routes" className="text-sm text-slate-400 hover:text-slate-100">
@@ -323,6 +329,29 @@ export default function RouteDetail() {
             <button onClick={() => setEditing(true)} className="btn mt-3 mr-2 text-sm">
               Edit details
             </button>
+          )}
+          {!editing && (
+            <select
+              aria-label={`Add ${route.name} to a list`}
+              value=""
+              disabled={lists.length === 0}
+              onChange={(e) =>
+                setLists(
+                  lists.map((l) =>
+                    l.id === e.target.value && !l.routeIds.includes(route.id) ? { ...l, routeIds: [...l.routeIds, route.id] } : l,
+                  ),
+                )
+              }
+              className="mt-3 mr-2 text-sm"
+            >
+              <option value="">{lists.length ? "Add to list…" : "No lists yet"}</option>
+              {lists.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.routeIds.includes(route.id) ? "✓ " : ""}
+                  {l.name}
+                </option>
+              ))}
+            </select>
           )}
           {route.fromApi && editing && (
             // What a file cannot say: filled in once the track is imported.
@@ -411,7 +440,7 @@ export default function RouteDetail() {
             This is faster than a usual hike. If it was a run, change its category.
           </p>
         )}
-        {planned && time.seconds && !time.personalised && (
+        {planned && !!time.seconds && !time.personalised && (
           <p className="-mt-3 text-xs text-slate-500">Duration is a generic walking estimate (Tobler), not yet based on your pace.</p>
         )}
 
@@ -438,7 +467,7 @@ export default function RouteDetail() {
           </div>
         )}
 
-        {(route.description || route.tags?.length) && (
+        {(route.description || !!route.tags?.length) && (
           <section aria-labelledby="description-title">
             <h2 id="description-title" className="mb-2 text-lg font-bold">
               Description
@@ -599,8 +628,13 @@ export default function RouteDetail() {
               <h2 id="photos-title" className="text-lg font-bold">
                 Photos
               </h2>
-              <label className="btn cursor-pointer text-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky-400">
-                {busy ? "Working…" : "Add photos"}
+              {/* Another action may hold `busy`: the label then only looks disabled, and says "Uploading…" for its own work. */}
+              <label
+                className={`btn cursor-pointer text-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky-400 ${
+                  busy ? "pointer-events-none opacity-40" : ""
+                }`}
+              >
+                {uploading ? "Uploading…" : "Add photos"}
                 <input
                   type="file"
                   multiple
@@ -612,10 +646,15 @@ export default function RouteDetail() {
                     e.target.value = ""; // so the same photo can be chosen again
                     if (!files.length) return;
                     attempt(async () => {
-                      const results = await addPhotos(route.id, files);
-                      setRoute({ ...route, photos: [...photos, ...results.flatMap((r) => r.photo ?? [])] });
-                      const failed = results.filter((r) => r.error);
-                      if (failed.length) setError(failed.map((r) => `${r.filename}: ${r.error}`).join(" "));
+                      setUploading(true);
+                      try {
+                        const results = await addPhotos(route.id, files);
+                        setRoute({ ...route, photos: [...photos, ...results.flatMap((r) => r.photo ?? [])] });
+                        const failed = results.filter((r) => r.error);
+                        if (failed.length) setError(failed.map((r) => `${r.filename}: ${r.error}`).join(" "));
+                      } finally {
+                        setUploading(false);
+                      }
                     });
                   }}
                 />

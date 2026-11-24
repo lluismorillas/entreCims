@@ -1,6 +1,6 @@
 import { useState } from "react";
 import RouteCard from "../components/RouteCard";
-import { type RouteInfo, TYPE_LABEL, useLists, useRoutes } from "../data";
+import { type RouteInfo, TYPE_LABEL, useRoutes } from "../data";
 
 const EMPTY = {
   place: "",
@@ -36,7 +36,6 @@ function matches(r: RouteInfo, f: typeof EMPTY) {
 
 export default function RoutesView() {
   const routes = useRoutes();
-  const [lists, setLists] = useLists();
   const [f, setF] = useState(EMPTY);
   const set = (key: keyof typeof EMPTY) => (e: { target: { value: string } }) =>
     setF({ ...f, [key]: e.target.value });
@@ -102,31 +101,7 @@ export default function RoutesView() {
       <ul className="grid flex-1 grid-cols-[repeat(auto-fill,minmax(17rem,1fr))] content-start gap-4 overflow-y-auto p-4">
         {shown.map((r) => (
           <li key={r.id}>
-            <RouteCard route={r} to={`/routes/${encodeURIComponent(r.id)}`}>
-              <select
-                aria-label={`Add ${r.name} to a list`}
-                value=""
-                disabled={lists.length === 0}
-                onChange={(e) =>
-                  setLists(
-                    lists.map((l) =>
-                      l.id === e.target.value && !l.routeIds.includes(r.id)
-                        ? { ...l, routeIds: [...l.routeIds, r.id] }
-                        : l,
-                    ),
-                  )
-                }
-                className="relative mt-3 w-full text-xs"
-              >
-                <option value="">{lists.length ? "Add to list…" : "No lists yet"}</option>
-                {lists.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.routeIds.includes(r.id) ? "✓ " : ""}
-                    {l.name}
-                  </option>
-                ))}
-              </select>
-            </RouteCard>
+            <RouteCard route={r} to={`/routes/${encodeURIComponent(r.id)}`} />
           </li>
         ))}
       </ul>

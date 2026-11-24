@@ -128,7 +128,7 @@ export default function RouteCard({ route, compact, to, children }: Props) {
           </p>
         )}
 
-        <dl className="mt-3 space-y-1.5">
+        <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
           <Stat icon="type" label="Type" value={TYPE_LABEL[route.type]} />
           <Stat
             icon="difficulty"
@@ -147,7 +147,7 @@ export default function RouteCard({ route, compact, to, children }: Props) {
           <Stat icon="descent" label="Descent" value={metres(route.descentM)} />
           <Stat icon="pace" label="Average pace" value={time.seconds ? pace(time.seconds, route.distanceM) : "–"} />
         </dl>
-        {planned && time.seconds && !time.personalised && (
+        {planned && !!time.seconds && !time.personalised && (
           <p className="mt-2 text-xs text-slate-500">~ Generic walking estimate (Tobler), not yet based on your pace.</p>
         )}
         {children}

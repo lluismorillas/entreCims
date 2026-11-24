@@ -3,9 +3,6 @@ data/
 # trakcs test
 eval/private/
 
-# tracks reals, mai al repositori
-/sample-data
-
 # tracks
 *.gpx
 *.fit
@@ -14,6 +11,8 @@ eval/private/
 !backend/tests/**/*.gpx
 !backend/tests/**/*.fit
 !backend/tests/**/*.tcx
+# mostres sintètiques (les reals de sample-data/ continuen ignorades)
+!sample-data/synthetic-*.gpx
 
 # Bases de dades locals
 *.db

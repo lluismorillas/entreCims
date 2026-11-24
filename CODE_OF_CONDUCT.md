@@ -1,5 +1,5 @@
-# Codi de conducta
+# Code of conduct
 
-Aquest projecte adopta el [Contributor Covenant 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
+This project adopts the [Contributor Covenant 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/). Everyone taking part in issues, pull requests and discussions is expected to follow it.
 
-Per comunicar un comportament inadequat, contacta amb el mantenidor del projecte a través del seu perfil de GitHub.
+To report unacceptable behaviour, contact the maintainer privately through their [GitHub profile](https://github.com/lluismorillas). Reports are handled confidentially.

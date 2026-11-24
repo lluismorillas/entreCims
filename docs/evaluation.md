@@ -3,7 +3,7 @@
 <!-- peaks:start -->
 ## Cims
 
-Generat per `eval/peaks.py report`. Llavor 2026, 1000 rèpliques de bootstrap per cim.
+Generat per `eval/peaks.py report`.
 
 ### Mostra
 

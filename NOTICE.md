@@ -1,41 +1,61 @@
-# Avisos i llicències de tercers
+# Third-party notices
 
-## Dades
-| Font | Ús | Llicència | Atribució |
-| OpenStreetMap | Cims i mapa base | ODbL | © OpenStreetMap contributors, visible al mapa |
-| Valhalla (servidor públic de FOSSGIS) | Camí i altitud del planificador de rutes, sobre dades d'OpenStreetMap | Programari MIT; dades ODbL | © OpenStreetMap contributors |
-| Mapterhorn | Terreny 3D i ombrejat del mapa | Diverses fonts obertes, llistades a <https://mapterhorn.com/attribution> | © Mapterhorn, visible al mapa |
+## Data and services
 
-Les dades d'OpenStreetMap no es distribueixen amb aquest repositori. Cada instal·lació les descarrega.
+| Source | Used for | Licence | Attribution |
+|---|---|---|---|
+| OpenStreetMap | Base map and peaks | ODbL | © OpenStreetMap contributors, shown on the map |
+| Overpass API (public server of FOSSGIS) | Downloading OpenStreetMap peaks | Software AGPL-3.0; data ODbL | © OpenStreetMap contributors |
+| Valhalla (public server of FOSSGIS) | Paths and elevation in the route planner, from OpenStreetMap data | Software MIT; data ODbL | © OpenStreetMap contributors |
+| Mapterhorn | 3D terrain and relief shading | Several open sources, listed at <https://mapterhorn.com/attribution> | © Mapterhorn, shown on the map |
 
-## Peticions externes
+OpenStreetMap data is not distributed with this repository: each installation downloads it.
 
-L'aplicació només es connecta a l'exterior per obtenir:
+## Requests to outside services
 
-- Les rajoles del mapa.
-- Els cims, a través d'Overpass. El primer cop que arrenca, descarrega els de Catalunya i els desa en local. La regió es canvia amb `ENTRECIMS_PEAKS_REGION` (el nom d'una àrea administrativa d'OSM), i buida no en descarrega cap. Després, només es connecta si l'usuari demana els cims d'una altra zona: la vista del mapa, els voltants d'una ruta o una zona pel nom. Les zones conegudes (països, comunitats autònomes i departaments francesos del Pirineu) són a `backend/src/areas.json`, amb l'identificador de la seva relació d'OSM.
-- El model d'elevació del terreny 3D, a Mapterhorn. Es pot desactivar deixant buida `VITE_TERRAIN_TILEJSON_URL`.
-- El camí i l'altitud entre dos punts del planificador de rutes, al servidor públic de Valhalla (<https://valhalla1.openstreetmap.de>), que rep les coordenades clicades. Es pot apuntar a un Valhalla propi o desactivar deixant buida `VITE_VALHALLA_URL`.
+The app contacts outside services only to get:
 
-## Dependències
-| Dependència | Llicència |
+- **Map tiles**, from the server in `VITE_MAP_TILES_URL` (OpenStreetMap by default). Follow its [tile usage policy](https://operations.osmfoundation.org/policies/tiles/) or point it to your own server.
+- **3D terrain**, from Mapterhorn. Leave `VITE_TERRAIN_TILEJSON_URL` empty to turn it off.
+- **Peaks**, from Overpass. On the first start the server downloads those of Catalonia and keeps them locally; change the area with `ENTRECIMS_PEAKS_REGION`, or leave it empty for none. Afterwards it only connects when you ask for the peaks of another area: the map view, the surroundings of a route, or an area by name. The known areas (countries, Spanish autonomous communities and the French Pyrenean départements) are listed in `backend/src/areas.json` with their OpenStreetMap relation id. Overpass receives the box or area name, never your tracks.
+- **Paths and elevation for the route planner**, from Valhalla, which receives the points you click. Point `VITE_VALHALLA_URL` to your own Valhalla so they go nowhere, or leave it empty to draw straight lines without any request.
+
+Your tracks, photos and database are never sent anywhere.
+
+## Software dependencies
+
+### Interface
+
+| Dependency | Licence |
+|---|---|
 | MapLibre GL JS | BSD-3-Clause |
-| React i React DOM | MIT |
+| React and React DOM | MIT |
 | React Router | MIT |
 | Tailwind CSS | MIT |
-| Vite | MIT |
+| Vite and @vitejs/plugin-react | MIT |
 | TypeScript | Apache-2.0 |
 | oxlint | MIT |
-| gpxpy | Apache-2.0 |
-| defusedxml | PSF |
-| fitdecode | MIT |
-| python-multipart | Apache-2.0 |
-| Pillow | MIT-CMU |
-| tzdata | Apache-2.0 |
+
+### Server
+
+| Dependency | Licence |
+|---|---|
 | FastAPI | MIT |
 | Uvicorn | BSD-3-Clause |
+| python-multipart | Apache-2.0 |
+| gpxpy | Apache-2.0 |
+| fitdecode | MIT |
+| defusedxml | PSF-2.0 |
+| Pillow | MIT-CMU |
+| tzdata | Apache-2.0 |
+
+### Development only
+
+| Dependency | Licence |
+|---|---|
 | pytest | MIT |
 | HTTPX | BSD-3-Clause |
 | Ruff | MIT |
+| uv | MIT or Apache-2.0 |
 
-Aquesta llista s'ha d'ampliar a mesura que s'instal·lin dependències.
+Add a row here whenever a dependency is added.

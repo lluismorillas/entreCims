@@ -3,15 +3,13 @@ data/
 # trakcs test
 eval/private/
 
+# tracks reals, mai al repositori
 /sample-data
 
 # tracks
 *.gpx
 *.fit
 *.tcx
-!sample-data/**/*.gpx
-!sample-data/**/*.fit
-!sample-data/**/*.tcx
 # proves
 !backend/tests/**/*.gpx
 !backend/tests/**/*.fit

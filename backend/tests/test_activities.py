@@ -112,7 +112,7 @@ def test_init_upgrades_an_older_database(tmp_path, monkeypatch):
 
 
 def test_fast_hike_is_flagged(client):
-    # 111 m en 10 s són 40 km/h: massa per a una excursió (FR-106).
+    # 111 m en 10 s són 40 km/h: massa per a una excursió.
     fast = GPX.replace("10:01:00Z", "10:00:10Z").replace(
         "<type>trail_running</type>", ""
     )

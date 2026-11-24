@@ -1,4 +1,4 @@
-"""Avaluació del model de temps (spec.md F3: T046 i T047).
+"""Avaluació del model de temps.
 
     uv run --project backend python eval/timing.py eval/private
 
@@ -21,7 +21,7 @@ from timing import TOBLER, calibrate, naismith
 
 SEED = 2026
 BOOTSTRAP = 1000
-# Com a l'aplicació: més de pressa no és caminar (spec.md, qüestió oberta 1). Les curses es
+# Com a l'aplicació: més de pressa no és caminar (les excursions d'aquestes dades no hi arriben). Les curses es
 # separen en `trail_run` i `run` per l'esport que desa el fitxer.
 HIKE_MAX_KMH = 6
 TITLES = {"hike": "Excursions", "trail_run": "Curses de muntanya", "run": "Curses"}

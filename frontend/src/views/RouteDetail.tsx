@@ -49,7 +49,7 @@ function around(line: number[][]) {
 const peakName = (p: { name: string | null; ele_m: number | null }) =>
   `${p.name ?? "Unnamed peak"}${p.ele_m == null ? "" : ` (${Math.round(p.ele_m)} m)`}`;
 
-/** Why the detection accepted or rejected a peak, in the order of the three conditions (FR-209). */
+/** Why the detection accepted or rejected a peak, in the order of the three conditions. */
 function reasons(p: PeakCandidate) {
   const gap = p.ele_gap_m;
   return [
@@ -143,7 +143,7 @@ export default function RouteDetail() {
     map.fitBounds(bounds, { padding: 50, maxZoom: 15, animate: false });
   }, [map, track]);
 
-  // One marker per photo that could be placed; its popup shows the photo (FR-110).
+  // One marker per photo that could be placed; its popup shows the photo.
   useEffect(() => {
     if (!map || !photos) return;
     const markers = photos
@@ -161,7 +161,7 @@ export default function RouteDetail() {
     return () => markers.forEach((m) => m.remove());
   }, [map, photos]);
 
-  // One marker per reached peak (FR-206).
+  // One marker per reached peak.
   useEffect(() => {
     if (!map || !candidates) return;
     const markers = candidates
@@ -175,7 +175,7 @@ export default function RouteDetail() {
     return () => markers.forEach((m) => m.remove());
   }, [map, candidates]);
 
-  // Each segment coloured by real against predicted time (FR-403), over the track and the relief.
+  // Each segment coloured by real against predicted time, over the track and the relief.
   const segments = deviations?.deviations?.segments;
   useEffect(() => {
     if (!map || !segments) return;
@@ -272,7 +272,7 @@ export default function RouteDetail() {
     ["Average pace", time.seconds ? pace(time.seconds, route.distanceM) : "–"],
     [
       "Category",
-      // The type comes from the file and can always be corrected (FR-106).
+      // The type comes from the file and can always be corrected.
       route.fromApi ? (
         <select
           key="category"
@@ -572,7 +572,7 @@ export default function RouteDetail() {
                         </p>
                         <p className="mt-0.5 text-xs text-slate-400">Detection: {reasons(p)}</p>
                       </div>
-                      {/* A correction is kept when the activities are analysed again (FR-208). */}
+                      {/* A correction is kept when the activities are analysed again. */}
                       <button
                         disabled={busy}
                         className="btn text-xs"

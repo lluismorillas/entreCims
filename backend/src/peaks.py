@@ -114,7 +114,7 @@ def _drops(t: Track, top: int, step: int, prm: Params) -> bool:
 
 
 def judge(t: Track, peak: Peak, point_d, seg_d, prm: Params) -> Result:
-    # Un pas és una tirada de segments seguits a menys de R. Anar i tornar en fa dos (FR-205).
+    # Un pas és una tirada de segments seguits a menys de R. Anar i tornar en fa dos.
     passes: list[list[int]] = []
     for i, d in enumerate(seg_d):
         if d < prm.r:
@@ -273,7 +273,7 @@ def candidates(con, t: Track):
 
 
 def detect(con, activity_id: str) -> None:
-    """Torna a avaluar els cims a menys de 300 m d'una activitat. Les correccions manuals es conserven (FR-208)."""
+    """Torna a avaluar els cims a menys de 300 m d'una activitat. Les correccions manuals es conserven."""
     t = track(
         con.execute(
             "SELECT lat, lon, ele_m, dist_m, time FROM points WHERE activity_id = ? ORDER BY seq",
@@ -309,7 +309,7 @@ def detect(con, activity_id: str) -> None:
 
 
 def for_activity(con, activity) -> dict:
-    """Estat de la detecció i candidats d'una sortida, amb els motius (FR-206, FR-209)."""
+    """Estat de la detecció i candidats d'una sortida, amb els motius."""
     if activity["kind"] != "activity":
         status = "planned"
     elif con.execute(
@@ -401,7 +401,7 @@ class Region(BaseModel):
 
 @router.post("/peaks/download")
 def download(region: Region) -> StreamingResponse:
-    """Descarrega els cims d'una caixa i torna a analitzar les activitats (FR-201)."""
+    """Descarrega els cims d'una caixa i torna a analitzar les activitats."""
     box = (region.south, region.west, region.north, region.east)
     return _download(lambda: _overpass([box]))
 
@@ -476,7 +476,7 @@ def rerun_all() -> dict:
 
 @router.get("/peaks/reached")
 def reached() -> list[dict]:
-    """Cims assolits amb el nombre de vegades i les dates (FR-207). Mana la correcció manual."""
+    """Cims assolits amb el nombre de vegades i les dates. Mana la correcció manual."""
     peaks: dict[int, dict] = {}
     with db.session() as con:
         for row in con.execute(
@@ -504,7 +504,7 @@ class Label(BaseModel):
 
 @router.put("/activities/{activity_id}/peaks/{peak_id}")
 def label(activity_id: str, peak_id: int, body: Label) -> dict:
-    """Confirma o rebutja un cim. La correcció sobreviu a les noves anàlisis (FR-208)."""
+    """Confirma o rebutja un cim. La correcció sobreviu a les noves anàlisis."""
     with db.session() as con:
         updated = con.execute(
             "UPDATE activity_peaks SET manual_label = ? WHERE activity_id = ? AND peak_id = ?",

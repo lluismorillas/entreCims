@@ -94,7 +94,7 @@ def _import(filename: str, data: bytes) -> dict:
             ),
         )
         if track.kind == "activity":
-            peaks.detect(con, activity_id)  # FR-202
+            peaks.detect(con, activity_id)  # cims assolits, en importar-la
         # original es conserva sense modificar. Si no es pot desar, la sessió es desfà.
         (db.DATA / "originals").mkdir(exist_ok=True)
         (db.DATA / original).write_bytes(data)
@@ -117,7 +117,7 @@ def import_files(files: list[UploadFile], background: BackgroundTasks) -> list[d
             )
         except TrackError as exc:
             results.append({"filename": name, "error": str(exc)})
-    # Un sol reajust per lot, després de respondre (FR-302).
+    # Un sol reajust per lot, després de respondre.
     background.add_task(timing.refit)
     return results
 
@@ -126,7 +126,7 @@ def import_files(files: list[UploadFile], background: BackgroundTasks) -> list[d
 def list_activities(
     q: str = "", date_from: date | None = None, date_to: date | None = None
 ) -> list[dict]:
-    """Llista de sortides, amb cerca per nom i filtre per data (FR-107)."""
+    """Llista de sortides, amb cerca per nom i filtre per data."""
     sql = "SELECT * FROM activities WHERE instr(lower(name), lower(?)) > 0"
     args: list = [q.strip()]
     # rutes planificades no tenen data: filtre data les deixa fora.
@@ -228,7 +228,7 @@ def patch_activity(
 
 @router.delete("/{activity_id}", status_code=204)
 def delete_activity(activity_id: str, background: BackgroundTasks) -> None:
-    """Elimina la sortida i tot el que en depèn (FR-111). La confirmació és cosa de la interfície."""
+    """Elimina la sortida i tot el que en depèn. La confirmació és cosa de la interfície."""
     with db.session() as con:
         files = [find(con, activity_id)["original_path"]]
         files += [

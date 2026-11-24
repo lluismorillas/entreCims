@@ -1,4 +1,4 @@
-"""Model de temps (F3): trams, referències, ajust i API, amb tracks sintètics."""
+"""Model de temps: trams, referències, ajust i API, amb tracks sintètics."""
 
 import math
 from datetime import UTC, datetime, timedelta
@@ -84,7 +84,7 @@ def test_training_recovers_the_walker_and_shrinks_to_tobler_with_few_hikes():
     h = timing.hike(walk())
     own = timing.train([h], n0=0)
     assert (own.v0, own.ku, own.kd) == pytest.approx(TRUE[:3], rel=0.1)
-    # Amb una sola sortida i N0 molt gran, gairebé tot és Tobler (FR-304).
+    # Amb una sola sortida i N0 molt gran, gairebé tot és Tobler.
     shrunk = timing.train([h], n0=1000)
     assert (shrunk.ku, shrunk.kd) == pytest.approx(TOBLER[1:3], rel=0.01)
     # La velocitat és sempre la pròpia: Tobler camina, i alentiria els models de cursa.

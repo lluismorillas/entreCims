@@ -23,9 +23,7 @@ eval/private/
 *.db-wal
 *.db-shm
 
-# ─────────────────────────────────────────────
-# Documents SDD (de treball local, segons plan.md)
-# ─────────────────────────────────────────────
+# Documents de treball locals: no es publiquen
 .specify/
 specs/
 

@@ -27,7 +27,7 @@ function describe(p: DownloadProgress) {
 const date = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No date";
 
-/** Global list of reached peaks (FR-207) and the download of the peaks of a region (FR-201). */
+/** Global list of reached peaks and the download of the peaks of a region. */
 export default function Peaks() {
   const [map, setMap] = useState<maplibregl.Map | null>(null);
   const [peaks, reload] = useReachedPeaks();

@@ -7,7 +7,7 @@ const H = 216;
 // Room on the left and below for the axis titles.
 const PAD = { left: 64, right: 10, top: 14, bottom: 40 };
 
-/** Elevation against distance. Hovering reports the track position so the map can mark it (FR-109). */
+/** Elevation against distance. Hovering reports the track position so the map can mark it. */
 type Props = {
   line: number[][];
   /** Real length of the route: a simplified line cuts corners and measures shorter. */

@@ -7,7 +7,7 @@ const H = 236;
 const PAD = { left: 74, right: 70, top: 14, bottom: 44 };
 
 /**
- * Walking speed against slope: the user's model and Tobler as a dashed reference (FR-308).
+ * Walking speed against slope: the user's model and Tobler as a dashed reference.
  * `curve` rows are [slope %, model km/h, Tobler km/h].
  */
 export default function SpeedCurve({ curve }: { curve: [number, number, number][] }) {

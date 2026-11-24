@@ -1,4 +1,4 @@
-"""Llegeix un fitxer GPX, FIT o TCX i en retorna els punts unificats (FR-101, FR-102, FR-112)."""
+"""Llegeix un fitxer GPX, FIT o TCX i en retorna els punts unificats."""
 
 import io
 from datetime import UTC, datetime
@@ -26,14 +26,14 @@ class Point(NamedTuple):
 
 class Track(NamedTuple):
     name: str
-    kind: str  # "activity" o "planned" (FR-102)
-    type: str  # "hike", "trail_run" o "run" (FR-106)
+    kind: str  # "activity" o "planned"
+    type: str  # "hike", "trail_run" o "run"
     source_format: str
     points: list[Point]
 
 
 def _gpx(data: bytes):
-    # defusedxml rebutja l'XML maliciós abans que gpxpy llegeixi el fitxer (NFR-6).
+    # defusedxml rebutja l'XML maliciós abans que gpxpy llegeixi el fitxer.
     ElementTree.fromstring(data)
     gpx = gpxpy.parse(data)
     found = [p for t in gpx.tracks for s in t.segments for p in s.points]

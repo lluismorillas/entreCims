@@ -1,6 +1,6 @@
-"""Model de temps personalitzat (F3): trams, ajust, referències i predicció.
+"""Model de temps personalitzat: trams, ajust, referències i predicció.
 
-La velocitat té la forma de Tobler amb la pujada i la baixada separades (spec.md F3):
+La velocitat té la forma de Tobler amb la pujada i la baixada separades:
     v(s) = v0 · exp(-ku · (s - s0))  si s >= s0
     v(s) = v0 · exp(-kd · (s0 - s))  si s <  s0
 Amb s0 fix, log v és lineal en (log v0, ku, kd): l'ajust són mínims quadrats ponderats.
@@ -23,7 +23,7 @@ from importers import Point
 
 router = APIRouter(prefix="/api")
 
-SEGMENT_M = 100  # longitud dels trams (spec.md F3)
+SEGMENT_M = 100  # longitud dels trams, en metres
 S0 = -0.05  # pendent de velocitat màxima, fix com a Tobler
 # Un model per tipus d'activitat a peu. La bici queda fora: la forma de Tobler no hi encaixa.
 Kind = Literal["hike", "trail_run", "run"]
@@ -40,8 +40,10 @@ NAISMITH = (
     3600 / 5000,
     3600 / 600,
 )  # segons per metre recorreguts i per metre de pujada
-HALF_LIFE_DAYS = float(os.environ.get("ENTRECIMS_HALF_LIFE_DAYS", "180"))  # FR-303
-N0 = 5  # amb N0 sortides, el model propi i Tobler pesen igual (FR-304)
+HALF_LIFE_DAYS = float(
+    os.environ.get("ENTRECIMS_HALF_LIFE_DAYS", "180")
+)  # pes de les sortides antigues
+N0 = 5  # amb N0 sortides, el model propi i Tobler pesen igual
 Z90 = 1.645  # interval del 90 %
 DEFAULT_SIGMA = 0.25  # dispersió quan hi ha massa poques sortides per mesurar-la
 
@@ -245,7 +247,7 @@ def calibrate(hikes) -> tuple[float, float]:
 
 
 def stop_rate(hikes) -> float | None:
-    """Temps aturat per cada segon en moviment (FR-306). None sense sortides."""
+    """Temps aturat per cada segon en moviment. None sense sortides."""
     if not hikes:
         return None
     return sum(h.total_s - h.moving_s for h in hikes) / sum(h.moving_s for h in hikes)
@@ -294,7 +296,7 @@ _refitting = threading.Lock()
 
 
 def refit() -> None:
-    """Torna a ajustar el model de cada tipus i en desa una versió nova si ha canviat (FR-301, FR-302)."""
+    """Torna a ajustar el model de cada tipus i en desa una versió nova si ha canviat."""
     # L'arrencada i les peticions poden reajustar alhora: sense el lock desarien dues versions iguals.
     with _refitting:
         for kind in KINDS:
@@ -388,7 +390,7 @@ def current(kind: Kind = "hike") -> dict:
 
 @router.get("/model")
 def model(type: Kind = "hike") -> dict:
-    """Model actual d'un tipus i la seva corba de velocitat segons el pendent (FR-308)."""
+    """Model actual d'un tipus i la seva corba de velocitat segons el pendent."""
     info = current(type)
     m = Model(info["v0"], info["ku"], info["kd"], info["s0"])
     info["curve"] = [
@@ -407,7 +409,7 @@ def segment_time(info: dict, seg: Segment) -> float:
 
 @router.get("/activities/{activity_id}/deviations")
 def deviations(activity_id: str) -> dict:
-    """Cada tram d'una sortida i quant s'ha desviat del temps previst pel model actual (FR-403).
+    """Cada tram d'una sortida i quant s'ha desviat del temps previst pel model actual.
 
     `deviation` és el temps real entre el previst menys 1: positiu, més lent del previst.
     None en els trams on no hi ha temps en moviment (una parada).
@@ -515,15 +517,15 @@ class Route(BaseModel):
 
 @router.post("/predictions")
 def prediction(route: Route) -> dict:
-    """Temps en moviment previst amb un interval, i temps total amb les parades (FR-305, FR-306)."""
+    """Temps en moviment previst amb un interval, i temps total amb les parades."""
     if any(len(p) < 3 for p in route.points):
-        # FR-307: sense model d'elevació propi, una ruta sense altitud no es pot predir.
+        # Sense model d'elevació propi, una ruta sense altitud no es pot predir.
         raise HTTPException(
             422, "This route has no elevation, so its time cannot be predicted yet."
         )
     if any(not (-90 <= p[1] <= 90 and -180 <= p[0] <= 180) for p in route.points):
         raise HTTPException(422, "The route has invalid coordinates.")
-    # El mateix processament que un track importat (FR-309).
+    # El mateix processament que un track importat.
     stats = analyse([Point(p[1], p[0], p[2], None) for p in route.points])
     info = current(route.type)
     segs = segments(stats.dist_m, stats.ele_smooth_m)

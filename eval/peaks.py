@@ -1,4 +1,4 @@
-"""Avaluació de la detecció de cims (spec.md F2: T030, T036 i T037).
+"""Avaluació de la detecció de cims.
 
 1. Etiquetatge cec. Escriu els parells (activitat, cim a menys de 300 m) sense cap predicció:
 

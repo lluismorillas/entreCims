@@ -1,4 +1,4 @@
-"""Casos límit de spec.md F2 amb tracks sintètics, i els endpoints de cims."""
+"""Casos límit de la detecció de cims amb tracks sintètics, i els endpoints de cims."""
 
 from datetime import UTC, datetime, timedelta
 from math import cos, hypot, radians

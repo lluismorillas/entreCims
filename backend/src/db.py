@@ -1,4 +1,4 @@
-"""Esquema SQLite (plan.md §3). Tot viu dins d'un sol directori de dades (NFR-5)."""
+"""Esquema SQLite. Tot viu dins d'un sol directori de dades, que es pot copiar com a còpia de seguretat."""
 
 import os
 import sqlite3

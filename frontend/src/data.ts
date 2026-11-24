@@ -33,7 +33,7 @@ export type RouteInfo = {
   line: number[][];
 };
 
-// Base map tiles, shared by the main map and the card thumbnails (NFR-4: configurable).
+// Base map tiles, shared by the main map and the card thumbnails (configurable).
 export const TILES_URL: string =
   import.meta.env?.VITE_MAP_TILES_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 export const TILES_ATTRIBUTION: string =
@@ -49,7 +49,7 @@ export type Photo = {
   position_source: "exif" | "interpolated" | null;
 };
 
-/** A peak within 300 m of an activity, with the reasons of the detection (FR-209). */
+/** A peak within 300 m of an activity, with the reasons of the detection. */
 export type PeakCandidate = {
   id: number;
   name: string | null;
@@ -117,7 +117,7 @@ export type RouteList = { id: string; name: string; routeIds: string[] };
 export const TYPE_LABEL = { hike: "Hiking", run: "Running", trail: "Trail", bike: "Bike" };
 
 // shortcut: drawn routes and lists live only in this browser, because the API schema has no
-// place for them (spec.md leaves route drawing out of scope). Move both keys if that changes.
+// place for them (route drawing is a convenience outside the app's data model). Move both keys if that changes.
 function load<T>(key: string): T[] {
   try {
     return JSON.parse(localStorage.getItem(key) ?? "[]");
@@ -247,10 +247,10 @@ function upload(path: string, files: Iterable<File>, fields: Record<string, stri
   return api(path, { method: "POST", body });
 }
 
-/** Imports GPX, FIT and TCX files (FR-101). Each file gets its own result: imported, duplicate or invalid. */
+/** Imports GPX, FIT and TCX files. Each file gets its own result: imported, duplicate or invalid. */
 export const importFiles = (files: Iterable<File>): Promise<ImportResult[]> => upload("activities", files);
 
-/** Adds photos to a route (FR-110). The time zone is for photos that do not carry their own. */
+/** Adds photos to a route. The time zone is for photos that do not carry their own. */
 export const addPhotos = (id: string, files: Iterable<File>): Promise<PhotoResult[]> =>
   upload(`activities/${encodeURIComponent(id)}/photos`, files, { tz: Intl.DateTimeFormat().resolvedOptions().timeZone });
 
@@ -274,11 +274,11 @@ export async function updateRoute(id: string, edit: RouteEdit) {
 
 export const deleteRoute = (id: string) => api(`activities/${encodeURIComponent(id)}`, { method: "DELETE" });
 
-/** Confirms (true) or rejects (false) a peak of a route, or goes back to the detection (null). FR-208. */
+/** Confirms (true) or rejects (false) a peak of a route, or goes back to the detection (null). */
 export const labelPeak = (routeId: string, peakId: number, reached: boolean | null): Promise<PeakCandidate> =>
   api(`activities/${encodeURIComponent(routeId)}/peaks/${peakId}`, json("PUT", { reached }));
 
-/** Every reached peak with its visits (FR-207). `reload` fetches them again. */
+/** Every reached peak with its visits. `reload` fetches them again. */
 export function useReachedPeaks() {
   const [peaks, setPeaks] = useState<ReachedPeak[] | null>(null);
   const [version, setVersion] = useState(0);
@@ -294,7 +294,7 @@ export type DownloadProgress =
   | { stage: "analyse"; done: number; total: number }
   | { stage: "done" };
 
-/** Downloads the peaks of a box and re-analyses every activity, reporting each step (FR-201). */
+/** Downloads the peaks of a box and re-analyses every activity, reporting each step. */
 export const downloadPeaks = (
   region: { south: number; west: number; north: number; east: number },
   onProgress: (p: DownloadProgress) => void,
@@ -393,7 +393,7 @@ export type ModelHistory = {
   versions: { version: number; created_at: string; n_activities: number; flat_kmh: number }[];
 };
 
-/** Each 100 m of a recorded outing against the current model: real / predicted − 1 (FR-403). */
+/** Each 100 m of a recorded outing against the current model: real / predicted − 1. */
 export type Deviations = {
   method: TimeModel["method"];
   segments: { coordinates: number[][]; deviation: number | null }[];
@@ -442,7 +442,7 @@ export type Prediction = {
   version: number | null;
 };
 
-/** Asks the server for the time of a planned route (FR-305). `error` explains a refusal (FR-307). */
+/** Asks the server for the time of a planned route. `error` explains a refusal. */
 export function usePrediction(route: RouteInfo | null | undefined) {
   const [result, setResult] = useState<{ prediction?: Prediction; error?: string }>({});
   const line = route?.kind === "planned" ? route.line : null;
@@ -491,7 +491,7 @@ export function trackStats(points: number[][]) {
   let ascentM = 0;
   let descentM = 0;
   let toblerS = 0;
-  // 100 m segments (spec F3) so point-to-point noise does not become absurd slopes.
+  // 100 m segments, as in the time model, so point-to-point noise does not become absurd slopes.
   let segStart = points[0];
   let segDist = 0;
   // 5 m hysteresis: smaller steps are mostly elevation noise.
@@ -502,7 +502,7 @@ export function trackStats(points: number[][]) {
     if (!hasEle) continue;
     segDist += d;
     if (segDist >= 100 || i === points.length - 1) {
-      // Tobler's hiking function, m/s (plan.md §7).
+      // Tobler's hiking function, m/s.
       const speed = (6 * Math.exp(-3.5 * Math.abs((points[i][2] - segStart[2]) / segDist + 0.05))) / 3.6;
       if (segDist > 0) toblerS += segDist / speed;
       segStart = points[i];

@@ -12,7 +12,7 @@ const COLORS = { flat: "#0284c7", up: "#d97706", down: "#db2777" };
 const minutes = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
 const date = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
-/** How the time model sees the user, per activity type, and how that changed outing by outing (FR-308). */
+/** How the time model sees the user, per activity type, and how that changed outing by outing. */
 export default function TimeModel() {
   const [type, setType] = useState<(typeof TYPES)[number]>("hike");
   const model = useTimeModel(type);

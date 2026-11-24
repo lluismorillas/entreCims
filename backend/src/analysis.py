@@ -1,4 +1,4 @@
-"""Estadístiques d'un track: distància, desnivell, temps total i temps en moviment (FR-105)."""
+"""Estadístiques d'un track: distància, desnivell, temps total i temps en moviment."""
 
 import itertools
 from math import asin, cos, radians, sin, sqrt

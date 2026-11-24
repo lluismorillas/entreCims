@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AxisTitles from "./AxisTitles";
+import Icon from "./Icon";
 
 const W = 800;
 const H = 236;
@@ -83,28 +84,34 @@ export default function SpeedCurve({ curve }: { curve: [number, number, number][
         )}
         <AxisTitles x="Slope (+ uphill, − downhill)" y="Speed" width={W} height={H} pad={PAD} />
       </svg>
-      <details className="mt-2 text-xs text-slate-400">
-        <summary className="cursor-pointer hover:text-slate-100">Show as a table</summary>
-        <table className="mt-2 w-full max-w-sm text-right">
-          <thead>
-            <tr>
-              <th className="text-left font-semibold">Slope</th>
-              <th className="font-semibold">You (km/h)</th>
-              <th className="font-semibold">Tobler (km/h)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {curve
-              .filter((r) => r[0] % 10 === 0)
-              .map(([s, own, tobler]) => (
-                <tr key={s}>
-                  <td className="text-left">{s} %</td>
-                  <td>{own}</td>
-                  <td>{tobler}</td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+      <details className="group mt-3">
+        <summary className="btn inline-flex cursor-pointer list-none items-center gap-2 text-sm [&::-webkit-details-marker]:hidden">
+          <Icon name="chevron" className="size-4 transition-transform group-open:rotate-90" />
+          <span className="group-open:hidden">Show as a table</span>
+          <span className="hidden group-open:inline">Hide the table</span>
+        </summary>
+        <div className="mt-2 max-w-sm overflow-x-auto rounded-xl border border-slate-800">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Slope</th>
+                <th className="text-right">You</th>
+                <th className="text-right">Tobler</th>
+              </tr>
+            </thead>
+            <tbody>
+              {curve
+                .filter((r) => r[0] % 10 === 0)
+                .map(([s, own, tobler]) => (
+                  <tr key={s} className={s === 0 ? "font-semibold" : ""}>
+                    <td>{s > 0 ? `+${s}` : s} %</td>
+                    <td className="text-right text-sky-300">{own} km/h</td>
+                    <td className="text-right text-slate-400">{tobler} km/h</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
       </details>
     </figure>
   );

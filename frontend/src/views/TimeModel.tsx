@@ -64,7 +64,7 @@ export default function TimeModel() {
         {model && (
           <section aria-labelledby="curve-title">
             <h2 id="curve-title" className="mb-3 text-lg font-bold">
-              Your speed by slope, today
+              Your speed by slope
             </h2>
             <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
               <SpeedCurve curve={model.curve} />

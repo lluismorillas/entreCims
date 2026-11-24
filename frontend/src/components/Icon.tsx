@@ -8,6 +8,8 @@ const ICONS = {
   pace: "M22 12h-4l-3 9L9 3l-3 9H2",
   home: "m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z",
   plus: "M5 12h14M12 5v14",
+  chevron: "m9 18 6-6-6-6",
+  trash: "M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6",
   map: "m9 18-6 3V6l6-3 6 3 6-3v15l-6 3-6-3zM9 3v15M15 6v15",
   list: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
   flag: "M4 22V4h13l-2 4 2 4H4",

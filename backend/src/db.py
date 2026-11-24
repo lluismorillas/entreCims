@@ -74,6 +74,8 @@ CREATE TABLE IF NOT EXISTS photos(
 CREATE TABLE IF NOT EXISTS time_models(
     id INTEGER PRIMARY KEY,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- Un model per tipus d'activitat a peu, cadascun amb les seves versions.
+    type TEXT NOT NULL DEFAULT 'hike' CHECK (type IN ('hike', 'trail_run', 'run')),
     v0 REAL NOT NULL,
     ku REAL NOT NULL,
     kd REAL NOT NULL,
@@ -94,6 +96,13 @@ def init() -> None:
         existing = {row["name"] for row in con.execute("PRAGMA table_info(activities)")}
         for column in {"author", "location", "description", "tags"} - existing:
             con.execute(f"ALTER TABLE activities ADD COLUMN {column} TEXT")
+        # Models desats quan només n'hi havia un, el de les excursions.
+        if "type" not in {
+            row["name"] for row in con.execute("PRAGMA table_info(time_models)")
+        }:
+            con.execute(
+                "ALTER TABLE time_models ADD COLUMN type TEXT NOT NULL DEFAULT 'hike'"
+            )
 
 
 @contextmanager

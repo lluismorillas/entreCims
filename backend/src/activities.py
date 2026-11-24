@@ -7,11 +7,12 @@ from hashlib import sha256
 from typing import Annotated, Literal
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile
 from pydantic import BaseModel, StringConstraints
 
 import db
 import peaks
+import timing
 from analysis import analyse
 from importers import MAX_BYTES, TrackError, parse
 
@@ -101,7 +102,7 @@ def _import(filename: str, data: bytes) -> dict:
 
 
 @router.post("")
-def import_files(files: list[UploadFile]) -> list[dict]:
+def import_files(files: list[UploadFile], background: BackgroundTasks) -> list[dict]:
     """Importa un o més fitxers. Cada fitxer rep el seu resultat: `activity` o `error`."""
     results = []
     for file in files:
@@ -116,6 +117,8 @@ def import_files(files: list[UploadFile]) -> list[dict]:
             )
         except TrackError as exc:
             results.append({"filename": name, "error": str(exc)})
+    # Un sol reajust per lot, després de respondre (FR-302).
+    background.add_task(timing.refit)
     return results
 
 
@@ -195,7 +198,9 @@ class ActivityPatch(BaseModel):
 
 
 @router.patch("/{activity_id}")
-def patch_activity(activity_id: str, patch: ActivityPatch) -> dict:
+def patch_activity(
+    activity_id: str, patch: ActivityPatch, background: BackgroundTasks
+) -> dict:
     """Canvia només els camps enviats."""
     changes = patch.model_dump(exclude_unset=True)
     changes = {
@@ -214,11 +219,15 @@ def patch_activity(activity_id: str, patch: ActivityPatch) -> dict:
                 f"UPDATE activities SET {columns} WHERE id = :id",
                 {**changes, "id": activity_id},
             )
+        if "type" in changes:
+            background.add_task(
+                timing.refit
+            )  # només les sortides `hike` entrenen el model
         return _public(find(con, activity_id))
 
 
 @router.delete("/{activity_id}", status_code=204)
-def delete_activity(activity_id: str) -> None:
+def delete_activity(activity_id: str, background: BackgroundTasks) -> None:
     """Elimina la sortida i tot el que en depèn (FR-111). La confirmació és cosa de la interfície."""
     with db.session() as con:
         files = [find(con, activity_id)["original_path"]]
@@ -232,3 +241,4 @@ def delete_activity(activity_id: str) -> None:
         con.execute("DELETE FROM activities WHERE id = ?", (activity_id,))
     for path in files:
         (db.DATA / path).unlink(missing_ok=True)
+    background.add_task(timing.refit)

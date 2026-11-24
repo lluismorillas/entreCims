@@ -8,6 +8,7 @@ from starlette.staticfiles import StaticFiles
 
 import db
 import peaks as peak_data
+import timing
 from activities import router as activities
 from peaks import router as peaks
 from photos import router as photos
@@ -19,13 +20,19 @@ async def lifespan(app: FastAPI):
     db.init()
     # En segon pla: el servidor respon mentre es descarreguen els cims de la regió per defecte.
     threading.Thread(target=peak_data.download_default, daemon=True).start()
+    # Bases de dades amb sortides d'abans que existís el model: en tenen un des de l'arrencada.
+    refit = threading.Thread(target=timing.refit, daemon=True)
+    refit.start()
     yield
+    # Uns segons com a molt: un reajust tallat a mitges no escriuria en una base de dades ja tancada.
+    refit.join()
 
 
 app = FastAPI(title="entreCims", lifespan=lifespan)
 app.include_router(activities)
 app.include_router(photos)
 app.include_router(peaks)
+app.include_router(timing.router)
 
 
 @app.get("/api/health")

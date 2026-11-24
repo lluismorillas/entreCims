@@ -73,6 +73,15 @@ cd backend && uv run uvicorn main:app --app-dir src --reload   # API on port 800
 cd frontend && npm run dev                                     # open http://localhost:5173
 ```
 
+> **Windows PowerShell:** each line above starts from the project folder. Windows PowerShell 5.1, the one that comes with Windows, does not accept `&&` and stops with *"The token '&&' is not a valid statement separator"*. Use `;` instead, one command per terminal:
+>
+> ```powershell
+> cd backend; uv run uvicorn main:app --app-dir src --reload
+> cd frontend; npm run dev
+> ```
+>
+> The same goes for the install commands (`cd backend; uv sync`). With `;` the second command runs even if the first one fails, so check that the `cd` worked. [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows) accepts `&&`, and so do Git Bash and WSL: there the commands work as written.
+
 - The development backend and the Docker container both use port 8000: stop the container first with `docker compose stop`.
 - In development, the data goes to `backend/data/`, not to the Docker volume: they are two separate databases.
 
@@ -82,6 +91,8 @@ Before opening a pull request, run the same checks as continuous integration:
 cd backend && uv run pytest && uv run ruff check . && uv run ruff format --check .
 cd frontend && npm test && npm run lint && npm run build
 ```
+
+In Windows PowerShell 5.1, run these checks from PowerShell 7, Git Bash or WSL, or run them one by one: with `;` a failing check would not stop the ones after it.
 
 ## How it works
 

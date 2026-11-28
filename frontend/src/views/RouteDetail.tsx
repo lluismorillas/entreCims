@@ -537,12 +537,12 @@ export default function RouteDetail() {
                       See the time model
                     </Link>
                   </p>
-                  {timeModel && (
+                  {timeModel?.n_activities ? (
                     <div>
                       <h3 className="mb-2 font-semibold">Your speed by slope ({TYPE_LABEL[route.type].toLowerCase()})</h3>
                       <SpeedCurve curve={timeModel.curve} />
                     </div>
-                  )}
+                  ) : null}
                 </div>
               )
             )}

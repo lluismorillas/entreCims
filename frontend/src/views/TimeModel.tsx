@@ -66,9 +66,14 @@ export default function TimeModel() {
             <h2 id="curve-title" className="mb-3 text-lg font-bold">
               Your speed by slope
             </h2>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-              <SpeedCurve curve={model.curve} />
-            </div>
+            {model.n_activities ? (
+              <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+                <SpeedCurve curve={model.curve} />
+              </div>
+            ) : (
+              // Without outings the backend returns Tobler, so "your" curve would just repeat it.
+              <p className="text-sm text-slate-400">Record a few {label} and your own curve will appear here.</p>
+            )}
           </section>
         )}
 
